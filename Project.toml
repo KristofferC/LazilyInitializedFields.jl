@@ -1,0 +1,13 @@
+name = "UninitializedFields"
+uuid = "0e77f7df-68c5-4e49-93ce-4cd80f5598bf"
+authors = ["Kristoffer <kcarlsson89@gmail.com> and contributors"]
+version = "0.1.0"
+
+[compat]
+julia = "1"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]
