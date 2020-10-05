@@ -97,6 +97,10 @@ padding-right:  10px;
         </li>
         
         <li class="nav-item">
+          <a class="nav-link" href="#caveats">Caveats</a>
+        </li>
+        
+        <li class="nav-item">
           <a class="nav-link" href="#implementation">Implementation</a>
         </li>
         
@@ -301,12 +305,42 @@ Variables
 Body::<span class="hljs-built_in">Union</span>{Nothing, <span class="hljs-built_in">Int64</span>}
 <span class="hljs-number">1</span> ─ %<span class="hljs-number">1</span> = Base.getproperty(f, :b)::<span class="hljs-built_in">Union</span>{Nothing, <span class="hljs-built_in">Int64</span>}
 └──      <span class="hljs-keyword">return</span> %<span class="hljs-number">1</span></code></pre>
+<section id="caveats" class="scrollspy">
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-10 mx-auto">
+        <h2>
+          Caveats
+        </h2>
+
+<p>When applying <code>@lazy</code> to a non-mutable struct, the standard way of mutating it via <code>setproperty&#33;</code> &#40;the <code>f.a &#61; b</code> syntax&#41;  is disabled. However, the struct is still considered mutable to Julia and the <code>setproperty&#33;</code> can be bypassed:</p>
+<pre><code class="julia-repl hljs"><span class="hljs-meta">julia&gt;</span><span class="julia"> <span class="hljs-meta">@lazy</span> <span class="hljs-keyword">struct</span> Foo
+           a::<span class="hljs-built_in">Int</span>
+           <span class="hljs-meta">@lazy</span> b::<span class="hljs-built_in">Int</span>
+       <span class="hljs-keyword">end</span>
+</span>
+<span class="hljs-meta">julia&gt;</span><span class="julia"> f = Foo(<span class="hljs-number">1</span>, uninit)
+</span>Foo(1, uninit)
+
+<span class="hljs-meta">julia&gt;</span><span class="julia"> f.a = <span class="hljs-number">2</span>
+</span>ERROR: setproperty! for struct of type `Foo` has been disabled
+[...]
+
+<span class="hljs-meta">julia&gt;</span><span class="julia"> setfield!(f, :a, <span class="hljs-number">2</span>)
+</span>2
+
+<span class="hljs-meta">julia&gt;</span><span class="julia"> f.a
+</span>2</code></pre>
+<p>The fact that the struct is considered mutable by Julia also means that it will no longer be stored inline in cases where the non <code>@lazy</code> version would:</p>
+<pre><code class="julia-repl hljs"><span class="hljs-meta">julia&gt;</span><span class="julia"> isbitstype(Foo)
+</span>false</code></pre>
+<p>This has an effect if you would try to pass a <code>Vector&#123;Foo&#125;</code> to e.g. C via <code>ccall</code>.</p>
       </div>
     </div>
   </div>
 </section>
 
-<section id="implementation" class="scrollspy">
+<section id="implementation" class="scrollspy section-bg-color">
   <div class="container">
     <div class="row">
       <div class="col-lg-10 mx-auto">
