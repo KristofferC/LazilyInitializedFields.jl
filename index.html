@@ -187,28 +187,28 @@ padding-right:  10px;
 </li>
 </ol>
 <pre><code class="julia-repl hljs"><span class="hljs-meta">julia&gt;</span><span class="julia"> f.b
-</span>  ERROR: uninitialized field b</code></pre>
+</span>ERROR: uninitialized field b</code></pre>
 <ol start="2">
 <li><p>Using a lazily initialized field does not interfere with the inferred return value of the field.</p>
 </li>
 </ol>
 <pre><code class="julia-repl hljs"><span class="hljs-meta">julia&gt;</span><span class="julia"> <span class="hljs-meta">@code_warntype</span> (f -&gt; f.b)(f)
-</span>  Variables
-    #self#::Core.Compiler.Const(var&quot;#1#2&quot;(), false)
-    f::Foo
+</span>Variables
+#self#::Core.Compiler.Const(var&quot;#1#2&quot;(), false)
+f::Foo
 
-  Body::Int64
-  1 ─ %1 = Base.getproperty(f, :b)::Int64
-  └──      return %1</code></pre>
+Body::Int64
+1 ─ %1 = Base.getproperty(f, :b)::Int64
+└──      return %1</code></pre>
 <ol start="3">
 <li><p>The struct should act as similar as possible to the equivalent normal struct when the struct is fully initialized.</p>
 </li>
 </ol>
 <pre><code class="julia-repl hljs"><span class="hljs-meta">julia&gt;</span><span class="julia"> <span class="hljs-meta">@init</span>! f.b = <span class="hljs-number">2</span>
-</span>  2
+</span>2
 
-  julia&gt; f.b
-  2</code></pre>
+<span class="hljs-meta">julia&gt;</span><span class="julia"> f.b
+</span>2</code></pre>
 <ol start="4">
 <li><p>Make it possible to uninitialize a field after it has been initializd if the value for example becomes invalidated.</p>
 </li>
