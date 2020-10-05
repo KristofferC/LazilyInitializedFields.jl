@@ -319,15 +319,14 @@ Body::<span class="hljs-built_in">Union</span>{Nothing, <span class="hljs-built_
    a::<span class="hljs-built_in">Int</span>
    <span class="hljs-meta">@lazy</span> b::<span class="hljs-built_in">Int</span>
 <span class="hljs-keyword">end</span></code></pre>
-<p>expands to three or four parts &#40;in the case where the struct is non-mutable&#41;. To make the code below runnable, we define the type <code>Uninitialized</code> that in reality lives inside the package:</p>
-<pre><code class="julia hljs"><span class="hljs-keyword">struct</span> Uninitialized <span class="hljs-keyword">end</span> <span class="hljs-comment"># this is defined inside the package</span>
+<p>expands to three or four parts &#40;in the case where the struct is non-mutable&#41;. To make the code below runnable, we define the type <code>Uninitialized</code> that in reality lives inside <code>LazilyInitializedFields</code>:</p>
+<pre><code class="julia hljs"><span class="hljs-keyword">struct</span> Uninitialized <span class="hljs-keyword">end</span>
 <span class="hljs-keyword">const</span> uninit = Uninitialized()</code></pre>
 <p>The first part of the expanded macro is the struct definition:</p>
 <pre><code class="julia hljs"><span class="hljs-keyword">mutable struct</span> Foo
     a::<span class="hljs-built_in">Int</span>
     b::<span class="hljs-built_in">Union</span>{Uninitialized, <span class="hljs-built_in">Int</span>}
-<span class="hljs-keyword">end</span>
-<span class="hljs-string">`</span></code></pre>
+<span class="hljs-keyword">end</span></code></pre>
 <p>This allows us to store a custom sentinel singleton that always signals an undefined value. The struct has also been made mutable since otherwise we cannot change the uninitialized value. The second part is to extend a method in LazilyInitializedFields that can be used to query what fields are lazy:</p>
 <pre><code class="julia hljs">islazyfield(::<span class="hljs-built_in">Type</span>{&lt;:Foo}, s::<span class="hljs-built_in">Symbol</span>) = s === :b</code></pre>
 <p>The third part is <code>getproperty</code> overloading:</p>
