@@ -93,7 +93,11 @@ Base.show(io::IO, b::Box) = show(io, b.x)
 
 # This is a replication of the Nothing and Missing conversion functionality from Base.
 # nonuninittype(::Type{T}) where {T} = Core.Compiler.typesubtract(T, Uninitialized)
-nonuninittype(::Type{T}) where {T} = Base.typesplit(T, Uninitialized)
+if isdefined(Base, :typesplit)
+    nonuninittype(::Type{T}) where {T} = Base.typesplit(T, Uninitialized)
+else
+    nonuninittype(::Type{T}) where {T} = Core.Compiler.typesubtract(T, Uninitialized)
+end
 promote_rule(T::Type{Uninitialized}, S::Type) = Union{S, Uninitialized}
 function promote_rule(T::Type{>:Uninitialized}, S::Type)
     R = nonuninittype(T)
