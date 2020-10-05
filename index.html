@@ -1,0 +1,352 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <!-- META -->
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="author" content="Kristoffer Carlsson">
+  <title>LazilyInitializedFields.jl</title>
+
+  <link rel="icon" type="image/png"  href="/LazilyInitializedFields.jl/assets/favicon.ico">
+
+  <!-- CSS -->
+  
+   <link rel="stylesheet" href="/LazilyInitializedFields.jl/libs/highlight/styles/atom-one-dark.css">
+   
+  <link rel="stylesheet" href="/LazilyInitializedFields.jl/css/bootstrap.min.css">
+  <style>.bg-primary {
+  background-color: #3f6388 !important;
+}
+
+a {
+  color: #2669DD;
+}
+
+a:hover {
+  color: teal;
+}
+
+.section-bg-color {
+  background-color: #f6f8fa;
+}
+
+footer a {
+  color: cornflowerblue;
+}
+
+
+header {
+  margin-top: 55px !important;
+}
+
+
+
+.jumbotron {
+  background-image: url("assets/diagonal-lines.svg");
+  background-repeat: repeat;
+}
+
+
+/* CODE ADJUSTMENTS */
+
+pre code.hljs {
+  border-radius: 10px;
+}
+
+pre code.hljs.plaintext {
+  margin-left: 15px;
+}
+</style>
+  <link rel="stylesheet" href="/LazilyInitializedFields.jl/css/custom.css">
+
+  <script async defer src="https://buttons.github.io/buttons.js"></script>
+</head>
+<body id="page-top">
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top" id="mainNav">
+  <div class="container">
+    <span class="navbar-brand">
+      
+        <img src="/LazilyInitializedFields.jl/assets/logo.svg" class="img-fluid" style="height:         25px;
+padding-right:  10px;
+" alt="Logo"/>
+      
+      <a href="#page-top">LazilyInitializedFields.jl</a>
+      
+    </span>
+    <input type="checkbox" id="navbar-toggler-cbox" class="d-none" />
+    <label for="navbar-toggler-cbox" class="navbar-toggler" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </label>
+    <div class="collapse navbar-collapse" id="navbarResponsive">
+      <ul class="navbar-nav ml-auto">
+        
+        <li class="nav-item">
+          <a class="nav-link" href="#about">About</a>
+        </li>
+        
+        <li class="nav-item">
+          <a class="nav-link" href="#usage">Usage</a>
+        </li>
+        
+        <li class="nav-item">
+          <a class="nav-link" href="#other_methods">Other methods</a>
+        </li>
+        
+        <li class="nav-item">
+          <a class="nav-link" href="#implementation">Implementation</a>
+        </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  <header class="text-white text-center">
+  
+    <div class="jumbotron jumbotron-fluid container-fluid bg-primary">
+  
+    <h1>LazilyInitializedFields.jl</h1>
+    <div class="lead"> Make handling lazily initialized fields,
+ easy and performant.
+</div>
+    
+      <a class="github-button" href="https://github.com/KristofferC/LazilyInitializedFields.jl" data-size="large" aria-label="View LazilyInitializedFields.jl on GitHub">View on GitHub</a>
+    
+    
+      <a class="github-button" href="https://github.com/KristofferC/LazilyInitializedFields.jl" data-icon="octicon-star" data-size="large" data-show-count="true" aria-label="Star LazilyInitializedFields.jl on GitHub">Star</a>
+    
+  </div>
+</header>
+
+  <!-- Content appended here -->
+<div class="franklin-content"><section id="about" class="scrollspy">
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-10 mx-auto">
+        <h2>
+          Lazily initialized fields
+        </h2>
+
+<p>A lazily initialized field is a field in a struct that starts of uninitialized &#40;does not have a value&#41; and at some later point gets initialized. This is useful when the value of this field is computed on-demand &#40;lazily&#41;.</p>
+<p>Some goals we want to achieve when using lazy fields:</p>
+<ol>
+<li><p>Accessing a lazily initialized field before it is initialized should error immediately.</p>
+</li>
+<li><p>Using a lazily initialized field does not interfere with the inferred return value of the field.</p>
+</li>
+<li><p>The struct should act as similar as possible to the equivalent normal struct when the struct is fully initialized.</p>
+</li>
+<li><p>Make it possible to uninitialize a field after it has been initializd if the value becomes invalidated for some reason.</p>
+</li>
+<li><p>Not force all fields to be considered mutable just because we want to lazily initialize one field.</p>
+</li>
+<li><p>Allow checking if a field is initialized.</p>
+</li>
+</ol>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="usage" class="scrollspy section-bg-color">
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-10 mx-auto">
+        <h2>
+          Usage
+        </h2>
+
+<p>Let&#39;s see a session with LazilyInitializedFields and how these goals are fulfilled. We first define a struct with one lazily initialized field. We then create it, using the exported <code>uninit</code> object for the field that should be lazily initialized:</p>
+<pre><code class="julia-repl hljs"><span class="hljs-meta">julia&gt;</span><span class="julia"> <span class="hljs-meta">@lazy</span> <span class="hljs-keyword">struct</span> Foo
+           a::<span class="hljs-built_in">Int</span>
+           <span class="hljs-meta">@lazy</span> b::<span class="hljs-built_in">Int</span>
+       <span class="hljs-keyword">end</span>
+</span>
+<span class="hljs-meta">julia&gt;</span><span class="julia"> f = Foo(<span class="hljs-number">1</span>, uninit)
+</span>Foo(1, uninit)</code></pre>
+<ol>
+<li><p>Accessing a lazily initialized field before it is initialized should error immediately.</p>
+</li>
+</ol>
+<pre><code class="julia-repl hljs"><span class="hljs-meta">julia&gt;</span><span class="julia"> f.b
+</span>  ERROR: uninitialized field b</code></pre>
+<ol start="2">
+<li><p>Using a lazily initialized field does not interfere with the inferred return value of the field.</p>
+</li>
+</ol>
+<pre><code class="julia-repl hljs"><span class="hljs-meta">julia&gt;</span><span class="julia"> <span class="hljs-meta">@code_warntype</span> (f -&gt; f.b)(f)
+</span>  Variables
+    #self#::Core.Compiler.Const(var&quot;#1#2&quot;(), false)
+    f::Foo
+
+  Body::Int64
+  1 ─ %1 = Base.getproperty(f, :b)::Int64
+  └──      return %1</code></pre>
+<ol start="3">
+<li><p>The struct should act as similar as possible to the equivalent normal struct when the struct is fully initialized.</p>
+</li>
+</ol>
+<pre><code class="julia-repl hljs"><span class="hljs-meta">julia&gt;</span><span class="julia"> <span class="hljs-meta">@init</span>! f.b = <span class="hljs-number">2</span>
+</span>  2
+
+  julia&gt; f.b
+  2</code></pre>
+<ol start="4">
+<li><p>Make it possible to uninitialize a field after it has been initializd if the value for example becomes invalidated.</p>
+</li>
+</ol>
+<pre><code class="julia-repl hljs"><span class="hljs-meta">julia&gt;</span><span class="julia"> <span class="hljs-meta">@uninit</span>! f.b
+</span>uninit
+
+<span class="hljs-meta">julia&gt;</span><span class="julia"> f.b
+</span>ERROR: uninitialized field b</code></pre>
+<ol start="5">
+<li><p>Not force all fields to be considered mutable just because we want to lazily initialize one field.</p>
+</li>
+</ol>
+<pre><code class="julia-repl hljs"><span class="hljs-meta">julia&gt;</span><span class="julia"> f.a = <span class="hljs-number">2</span>
+</span>ERROR: setproperty! for struct of type `Foo` has been disabled</code></pre>
+<ol start="6">
+<li><p>Allow checking if a field is initialized.</p>
+</li>
+</ol>
+<pre><code class="julia-repl hljs"><span class="hljs-meta">julia&gt;</span><span class="julia"> <span class="hljs-meta">@isinit</span> f.b
+</span>false
+
+<span class="hljs-meta">julia&gt;</span><span class="julia"> <span class="hljs-meta">@init</span>! f.b = <span class="hljs-number">2</span>
+</span>2
+
+<span class="hljs-meta">julia&gt;</span><span class="julia"> <span class="hljs-meta">@isinit</span> f.b
+</span>true</code></pre>
+<p>Instead of the macros <code>@init&#33; a.b &#61; 1</code>, <code>@isinit a.b</code> and <code>@uninit&#33; a.b</code> one can use the function <code>init&#40;a, :b, 1&#41;</code>, <code>isinit&#40;a, :b&#41;</code> and <code>uninit&#33;&#40;a, :b&#41;</code>.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="other_methods" class="scrollspy">
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-10 mx-auto">
+        <h2>
+          Other methods of achieving lazily initialized fields
+        </h2>
+
+<p>Let&#39;s assume we want to make a struct <code>Foo</code> with two <code>Int</code> fields, and the second field is lazily initialized. Here are some other more or less used methods other than using LazilyInitializedFields.jl:</p>
+<h3 id="use_a_reft_field"><a href="#use_a_reft_field">Use a <code>::Ref&#123;T&#125;</code> field</a></h3>
+<p>This does not work for <code>isbitstype</code> fields and we also need to use <code>&#91;&#93;</code> to access the value, thus, failing points 1, 3 and 5 above.</p>
+<pre><code class="julia-repl hljs"><span class="hljs-meta">julia&gt;</span><span class="julia"> <span class="hljs-keyword">mutable struct</span> Foo
+           a::<span class="hljs-built_in">Int</span>
+           b::<span class="hljs-built_in">Ref</span>{<span class="hljs-built_in">Int</span>}
+       <span class="hljs-keyword">end</span>
+</span>
+<span class="hljs-meta">julia&gt;</span><span class="julia"> Foo(a) = Foo(a, <span class="hljs-built_in">Ref</span>{<span class="hljs-built_in">Int</span>}());
+</span>
+<span class="hljs-meta">julia&gt;</span><span class="julia"> f = Foo(<span class="hljs-number">1</span>)
+</span>Foo(1, Base.RefValue{Int64}(4764233584))
+
+<span class="hljs-meta">julia&gt;</span><span class="julia"> f.b
+</span>Base.RefValue{Int64}(4764233584)
+
+<span class="hljs-meta">julia&gt;</span><span class="julia"> f.b[]
+</span>4764233584</code></pre>
+<h3 id="make_struct_mutable_together_with_new_initialization"><a href="#make_struct_mutable_together_with_new_initialization">Make struct mutable together with <code>new</code> initialization</a></h3>
+<p>This also does not work for <code>isbitstype</code> and for non-<code>isbitstype</code> we cannot uninitialize the field, failing points 1, 4 and 5 above.</p>
+<pre><code class="julia-repl hljs"><span class="hljs-meta">julia&gt;</span><span class="julia"> <span class="hljs-keyword">mutable struct</span> Foo
+           a::<span class="hljs-built_in">Int</span>
+           b::<span class="hljs-built_in">Int</span>
+           Foo(a) = new(a)
+       <span class="hljs-keyword">end</span>
+</span>
+<span class="hljs-meta">julia&gt;</span><span class="julia"> f = Foo(<span class="hljs-number">1</span>)
+</span>Foo(1, 29548)
+
+<span class="hljs-meta">julia&gt;</span><span class="julia"> f.b
+</span>29548</code></pre>
+<h3 id="make_struct_mutable_and_use_a_uniont_nothing"><a href="#make_struct_mutable_and_use_a_uniont_nothing">Make struct mutable and use a <code>Union&#123;T, Nothing&#125;</code></a></h3>
+<p>Accessing this field will not error when it is uninitialized and will infer as a union when the field is accessed, failing points 1, 2 and 5 above.</p>
+<pre><code class="julia hljs">julia&gt; <span class="hljs-keyword">mutable struct</span> Foo
+           a::<span class="hljs-built_in">Int</span>
+           b::<span class="hljs-built_in">Union</span>{Nothing, <span class="hljs-built_in">Int</span>}
+       <span class="hljs-keyword">end</span>
+
+julia&gt; f = Foo(<span class="hljs-number">1</span>, <span class="hljs-literal">nothing</span>)
+Foo(<span class="hljs-number">1</span>, <span class="hljs-literal">nothing</span>)
+
+julia&gt; f.b <span class="hljs-comment"># no error</span>
+
+julia&gt; <span class="hljs-meta">@code_warntype</span> (f -&gt; f.b)(f)
+Variables
+  <span class="hljs-comment">#self#::Core.Compiler.Const(var&quot;#1#2&quot;(), false)</span>
+  f::Foo
+
+Body::<span class="hljs-built_in">Union</span>{Nothing, <span class="hljs-built_in">Int64</span>}
+<span class="hljs-number">1</span> ─ %<span class="hljs-number">1</span> = Base.getproperty(f, :b)::<span class="hljs-built_in">Union</span>{Nothing, <span class="hljs-built_in">Int64</span>}
+└──      <span class="hljs-keyword">return</span> %<span class="hljs-number">1</span></code></pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="implementation" class="scrollspy section-bg-color">
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-10 mx-auto">
+        <h2>
+          Implementation
+        </h2>
+
+<p>The expression </p>
+<pre><code class="julia hljs"><span class="hljs-meta">@lazy</span> <span class="hljs-keyword">struct</span> Foo
+   a::<span class="hljs-built_in">Int</span>
+   <span class="hljs-meta">@lazy</span> b::<span class="hljs-built_in">Int</span>
+<span class="hljs-keyword">end</span></code></pre>
+<p>expands to three or four parts &#40;in the case where the struct is non-mutable&#41;. To make the code below runnable, we define the type <code>Uninitialized</code> that in reality lives inside the package:</p>
+<pre><code class="julia hljs"><span class="hljs-keyword">struct</span> Uninitialized <span class="hljs-keyword">end</span> <span class="hljs-comment"># this is defined inside the package</span>
+<span class="hljs-keyword">const</span> uninit = Uninitialized()</code></pre>
+<p>The first part of the expanded macro is the struct definition:</p>
+<pre><code class="julia hljs"><span class="hljs-keyword">mutable struct</span> Foo
+    a::<span class="hljs-built_in">Int</span>
+    b::<span class="hljs-built_in">Union</span>{Uninitialized, <span class="hljs-built_in">Int</span>}
+<span class="hljs-keyword">end</span>
+<span class="hljs-string">`</span></code></pre>
+<p>This allows us to store a custom sentinel singleton that always signals an undefined value. The struct has also been made mutable since otherwise we cannot change the uninitialized value. The second part is to extend a method in LazilyInitializedFields that can be used to query what fields are lazy:</p>
+<pre><code class="julia hljs">islazyfield(::<span class="hljs-built_in">Type</span>{&lt;:Foo}, s::<span class="hljs-built_in">Symbol</span>) = s === :b</code></pre>
+<p>The third part is <code>getproperty</code> overloading:</p>
+<pre><code class="julia hljs"><span class="hljs-keyword">function</span> Base.getproperty(f::Foo, s::<span class="hljs-built_in">Symbol</span>)
+    <span class="hljs-keyword">if</span> islazyfield(Foo, s)
+        r = getfield(f, s)
+        r <span class="hljs-keyword">isa</span> Uninitialized &amp;&amp; error(<span class="hljs-string">&quot;uninitialized field b&quot;</span>)
+        <span class="hljs-keyword">return</span> r
+    <span class="hljs-keyword">end</span>
+    <span class="hljs-keyword">return</span> getfield(f, s)
+<span class="hljs-keyword">end</span></code></pre>
+<p>This makes sure that accessing an uninitialized field errors <em>and</em> that type inference knows that the return value is exactly an <code>Int</code>. Since the struct was originally non-mutable, we also turn off <code>setproperty&#33;</code> via:</p>
+<pre><code class="julia hljs"><span class="hljs-keyword">function</span> Base.setproperty!(x::Foo, s::<span class="hljs-built_in">Symbol</span>, v)
+    error(<span class="hljs-string">&quot;setproperty! for struct of type `Foo` has been disabled&quot;</span>)
+<span class="hljs-keyword">end</span></code></pre>
+<p>The convenience macros <code>@init&#33;</code>, <code>@uninit&#33;</code>, <code>@isinit</code> does very simple transformations that checks that the field being manipulated is lazy &#40;via <code>islazyfield</code>&#41; and converts <code>getproperty</code> and <code>setproperty&#33;</code> to <code>getfield</code> and <code>setfield&#33;</code>.</p>
+<footer class="py-5 bg-dark">
+  <div class="container">
+    <p class="m-0 text-center text-white">&copy; Kristoffer Carlsson. Website powered by <a href="https://github.com/tlienart/Franklin.jl">Franklin.jl</a>, <a href="https://github.com/tlienart/PkgPage.jl">PkgPage.jl</a> and the <a href="https://julialang.org">Julia</a> programming language.</p>
+  </div>
+</footer>
+</div><!-- CONTENT ENDS HERE -->
+  
+  
+      
+
+
+  
+  <script src="/LazilyInitializedFields.jl/libs/simple-scrollspy.min.js"></script>
+  <script>
+  window.onload = function () {
+    scrollSpy('#navbarResponsive', {
+      sectionClass: '.scrollspy',
+      menuActiveTarget: '.nav-link',
+      offset: 100
+    })
+  }
+  </script>
+  </body>
+</html>
