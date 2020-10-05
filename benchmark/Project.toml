@@ -1,0 +1,5 @@
+[deps]
+BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
+LazilyInitializedFields = "0e77f7df-68c5-4e49-93ce-4cd80f5598bf"
+PkgBenchmark = "32113eaa-f34f-5b0d-bd6c-c81e245fc73d"
+StableRNGs = "860ef19b-820b-49d6-a774-d7a799459cd3"

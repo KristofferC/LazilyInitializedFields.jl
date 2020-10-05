@@ -23,6 +23,13 @@ jobs:
   exclude:
     - arch: x86
       os: osx
+  include:
+    - stage: "Benchmarks"
+      julia: nightly
+      os: linux
+      script:
+        - julia --project=benchmark/ -e 'using Pkg; Pkg.instantiate(); include("benchmark/benchmarks.jl"); run(SUITE)'
+      after_success: skip
 after_success:
   - |
     julia -e '
