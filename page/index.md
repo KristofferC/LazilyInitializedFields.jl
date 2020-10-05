@@ -109,10 +109,10 @@ Let's assume we want to make a struct `Foo` with two `Int` fields, and the
 second field is lazily initialized. Here are some other more or less used
 methods other than using LazilyInitializedFields.jl:
 
-~~~<h4>Use a `::Ref{T}` field</h4>~~~
+~~~<h4>Use a <code>::Ref{T}</code> field</h4>~~~
 
 This does not work for `isbitstype` fields and we also need to use `[]` to
-access the value, thus, failing points 1, 3 and 5 above.
+access the value, thus, failing points 1 and 3 above.
 
 ```julia-repl
 julia> mutable struct Foo
@@ -132,7 +132,7 @@ julia> f.b[]
 4764233584
 ```
 
-~~~<h4>Make struct mutable together with `new` initialization</h4>~~~
+~~~<h4>Make struct mutable together with <code>new</code> initialization</h4>~~~
 
 This also does not work for `isbitstype` and for non-`isbitstype` we cannot
 uninitialize the field, failing points 1, 4 and 5 above.
@@ -151,7 +151,7 @@ julia> f.b
 29548
 ```
 
-~~~<h4>Make struct mutable and use a `Union{T, Nothing}`</h4>~~~
+~~~<h4>Make struct mutable and use a <code>Union{T, Nothing}</code></h4>~~~
 
 Accessing this field will not error when it is uninitialized and will infer as a
 union when the field is accessed, failing points 1, 2 and 5 above.
