@@ -180,6 +180,44 @@ Body::Union{Nothing, Int64}
 
 \end{:section}
 
+\begin{:section, title="Caveats"}
+
+When applying `@lazy` to a non-mutable struct, the standard way of mutating it
+via `setproperty!` (the `f.a = b` syntax)  is disabled. However, the struct is
+still considered mutable to Julia and the `setproperty!` can be bypassed:
+
+```julia-repl
+julia> @lazy struct Foo
+           a::Int
+           @lazy b::Int
+       end
+
+julia> f = Foo(1, uninit)
+Foo(1, uninit)
+
+julia> f.a = 2
+ERROR: setproperty! for struct of type `Foo` has been disabled
+[...]
+
+julia> setfield!(f, :a, 2)
+2
+
+julia> f.a
+2
+```
+
+The fact that the struct is considered mutable by Julia also means that it will
+no longer be stored inline in cases where the non `@lazy` version would:
+
+```julia-repl
+julia> isbitstype(Foo)
+false
+```
+
+This has an effect if you would try to pass a `Vector{Foo}` to e.g. C via `ccall`.
+
+\end{:section}
+
 \begin{:section, title="Implementation"}
 
 The expression 
