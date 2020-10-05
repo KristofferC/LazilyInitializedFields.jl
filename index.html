@@ -85,6 +85,10 @@ padding-right:  10px;
         </li>
         
         <li class="nav-item">
+          <a class="nav-link" href="#installation">Installation</a>
+        </li>
+        
+        <li class="nav-item">
           <a class="nav-link" href="#usage">Usage</a>
         </li>
         
@@ -148,7 +152,21 @@ padding-right:  10px;
   </div>
 </section>
 
-<section id="usage" class="scrollspy section-bg-color">
+<section id="installation" class="scrollspy section-bg-color">
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-10 mx-auto">
+        <h2>
+          Installation
+        </h2>
+
+<pre><code class="julia hljs"><span class="hljs-keyword">using</span> Pkg; Pkg.add(url=<span class="hljs-string">&quot;https://github.com/KristofferC/LazilyInitializedFields.jl&quot;</span>)</code></pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="usage" class="scrollspy">
   <div class="container">
     <div class="row">
       <div class="col-lg-10 mx-auto">
@@ -224,7 +242,7 @@ padding-right:  10px;
   </div>
 </section>
 
-<section id="other_methods" class="scrollspy">
+<section id="other_methods" class="scrollspy section-bg-color">
   <div class="container">
     <div class="row">
       <div class="col-lg-10 mx-auto">
@@ -288,7 +306,7 @@ Body::<span class="hljs-built_in">Union</span>{Nothing, <span class="hljs-built_
   </div>
 </section>
 
-<section id="implementation" class="scrollspy section-bg-color">
+<section id="implementation" class="scrollspy">
   <div class="container">
     <div class="row">
       <div class="col-lg-10 mx-auto">
