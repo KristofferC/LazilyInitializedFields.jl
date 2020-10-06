@@ -12,13 +12,7 @@ using Test
 end
 f = Foo{Int}(1, uninit, 2.0, uninit, 3.0)
 
-@lazy struct Mut{T}
-    a::T
-    @lazy b::Int
-end
-m = Mut(1, uninit)
-
-@testset "LazilyInitializedFields" begin
+@testset "mutable typevar" begin
     @test f.a == 1
     @test_throws UninitializedFieldException f.b
     @test f.c == 2.0
@@ -47,11 +41,65 @@ m = Mut(1, uninit)
     @uninit! f.c
     @test !@isinit(f.c)
     @test_throws UninitializedFieldException f.d
+end
 
-    @test_throws LoadError @macroexpand @lazy a::Int
-
+@lazy struct ImMut{T}
+    a::T
+    @lazy b::Int
+end
+m = ImMut(1, uninit)
+@testset "immutable typevar" begin
     @test_throws ErrorException m.a = 2
     @test_throws ErrorException m.b = 2
+end
+
+@lazy struct Boxed
+    a::Int
+    @lazy b::Float64
+end
+box = Boxed(1, uninit)
+
+@lazy struct Boxed
+    a::Int
+    @lazy b::Float64
+end
+box = Boxed(1, uninit)
+
+@testset "Boxed" begin
+    @test isimmutable(box)
+    @test Boxed(1, 1).b === 1.0 # test conversion constructor
+    @test !(@isinit box.b)
+    @init! box.b = 2
+    @test @isinit box.b
+    @test box.b == 2
+    @uninit! box.b
+    @test !(@isinit box.b)
+end
+
+@lazy struct BoxedUnion
+    a::Int
+    @lazy b::Union{Missing, Nothing, Int}
+end
+boxed_union = BoxedUnion(1, uninit)
+
+@testset "Boxed" begin
+    @test isimmutable(box)
+    @test !(@isinit box.b)
+    if VERSION >= v"1.2"
+        @test BoxedUnion(1, 2.0).b === 2
+    else
+        @test_broken BoxedUnion(1, 2.0).b === 2
+    end
+    @init! box.b = 2
+    @test @isinit box.b
+    @test box.b == 2
+    @uninit! box.b
+    @test !(@isinit box.b)
+end
+
+@testset "misc" begin
+    @test_throws LoadError @macroexpand @lazy a::Int
+    @test_throws LoadError @macroexpand @lazy struct Bar end
 end
 
 doctest(LazilyInitializedFields; manual=false)

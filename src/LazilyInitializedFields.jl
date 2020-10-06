@@ -79,6 +79,50 @@ Base.show(io::IO, u::Uninitialized) = print(io, "uninit")
 # islazyfield(::Type{Foo}, s::Symbol) = s === :a || s === :b
 function islazyfield end
 
+# For immutable types without type parameters we create a Box
+# for the lazy fields instead of making the whole struct mutable
+# https://github.com/JuliaLang/julia/issues/35053
+mutable struct Box{T}
+    x::T
+end
+Base.getindex(b::Box) = b.x
+Base.setindex!(b::Box, v) = b.x = v
+Base.convert(::Type{Box{T}}, x) where {T} = Box{T}(x)
+Base.show(io::IO, b::Box) = show(io, b.x)
+
+
+# This is a replication of the Nothing and Missing conversion functionality from Base.
+if isdefined(Base, :typesplit)
+    nonuninittype(::Type{T}) where {T} = Base.typesplit(T, Uninitialized)
+else
+    nonuninittype(::Type{T}) where {T} = Core.Compiler.typesubtract(T, Uninitialized)
+end
+promote_rule(T::Type{Uninitialized}, S::Type) = Union{S, Uninitialized}
+function promote_rule(T::Type{>:Uninitialized}, S::Type)
+    R = nonuninittype(T)
+    R >: T && return Any
+    T = R
+    R = promote_type(T, S)
+    return Union{R, Uninitialized}
+end
+
+function nonuninittype_checked(T::Type)
+    R = nonuninittype(T)
+    R >: T && error("could not compute non-uninit type")
+    return R
+end
+
+# These are awful
+Base.convert(::Type{T}, x::T) where {T>:Uninitialized} = x
+Base.convert(::Type{T}, x) where {T>:Uninitialized} = convert(nonuninittype_checked(T), x)
+Base.convert(::Type{T}, x) where T>:Union{Uninitialized, Nothing} = convert(nonuninittype_checked(T), x)
+Base.convert(::Type{T}, x) where T>:Union{Uninitialized, Missing} = convert(nonuninittype_checked(T), x)
+Base.convert(::Type{T}, x) where T>:Union{Uninitialized, Missing, Nothing} = convert(nonuninittype_checked(T), x)
+# Ambiguity resolution
+Base.convert(::Type{T}, x::T) where T>:Union{LazilyInitializedFields.Uninitialized, Nothing} = x
+Base.convert(::Type{T}, x::T) where T>:Union{LazilyInitializedFields.Uninitialized, Missing} = x
+Base.convert(::Type{T}, x::T) where T>:Union{Nothing, Missing, LazilyInitializedFields.Uninitialized} = x
+
 
 struct NonLazyFieldException <: Exception
     T::DataType
@@ -96,6 +140,8 @@ end
 Base.showerror(io::IO, err::UninitializedFieldException) =
     print(io, "field `", err.s, "` in struct of type `$(err.T)` is not initialized")
 
+@inline _setfield!(x, s::Symbol, v) = !isimmutable(x) ? setfield!(x, s, v) : getfield(x, s)[] = v
+@inline _getfield(x, s::Symbol) = !isimmutable(x) ? getfield(x, s) : getfield(x, s)[]
 
 """
     init!(a, s::Symbol)
@@ -104,7 +150,7 @@ Function version of [@init!](@ref).
 """
 @inline function init!(x::T, s::Symbol, v) where {T}
     islazyfield(T, s) || throw(NonLazyFieldException(T, s))
-    return setfield!(x, s, v)
+    return _setfield!(x, s, v)
 end
 
 _check_setproperty_expr(expr, s) =
@@ -156,7 +202,7 @@ Function version of [@isinit](@ref).
 """
 @inline function isinit(x::T, s) where {T}
     islazyfield(T, s) || throw(NonLazyFieldException(T, s))
-    !(getfield(x, s) isa Uninitialized)
+    !(_getfield(x, s) isa Uninitialized)
 end
 """
     @isinit a.b
@@ -199,7 +245,7 @@ Function version of [`@uninit!`](@ref).
 
 @inline function uninit!(x::T, s::Symbol) where {T}
     islazyfield(T, s) || throw(NonLazyFieldException(T, s))
-    return setfield!(x, s, uninit)
+    return _setfield!(x, s, uninit)
 end
 
 """
@@ -269,6 +315,11 @@ end
 
 function lazy_struct(expr)
     mutable, structdef, body = expr.args
+    has_typevar = expr.args[2] isa Expr && expr.args[2].head === :curly
+    # We cannot use a box for the lazy value in case we have type
+    # parameters due to https://github.com/JuliaLang/julia/issues/35053
+    use_box = !mutable && !has_typevar
+    expr.args[1] = !use_box
     structname = if structdef isa Symbol
         structdef
     elseif structdef isa Expr && structdef.head === :curly
@@ -277,11 +328,16 @@ function lazy_struct(expr)
         error("internal error: unhandled expression $expr")
     end
 
-    expr.args[1] = true # make mutable
     lazyfield = QuoteNode[]
     for (i, arg) in enumerate(body.args)
         if arg isa Expr && arg.head === :macrocall && arg.args[1] === Symbol("@lazy")
-            body.args[i] = macroexpand(@__MODULE__, arg)
+            # a::Union{A, B} -> a::Union{A, B, Uninitialized}
+            expanded = macroexpand(@__MODULE__, arg)
+            if use_box
+                # Union{A, B, Uninitialized} -> Box{Uninitialized{A, B, Uninitialized}}
+                expanded.args[2] = :($Box{$(expanded.args[2])})
+            end
+            body.args[i] = expanded
             name = body.args[i].args[1]
             @assert name isa Symbol
             push!(lazyfield, QuoteNode(name))
@@ -301,13 +357,14 @@ function lazy_struct(expr)
         function Base.getproperty(x::$(esc(structname)), s::Symbol)
             if $(LazilyInitializedFields).islazyfield($(esc(structname)), s)
                 r = Base.getfield(x, s)
+                $(use_box ? :(r = r[]) : nothing)
                 r isa $Uninitialized && throw(UninitializedFieldException(typeof(x), s))
                 return r
             end
             return Base.getfield(x, s)
         end
     end)
-    if !mutable
+    if !mutable && !use_box
         push!(ret.args, quote
             function Base.setproperty!(x::$(esc(structname)), s::Symbol, v)
                 error("setproperty! for struct of type `", $(esc(structname)), "` has been disabled")

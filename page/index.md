@@ -180,9 +180,46 @@ Body::Union{Nothing, Int64}
 
 \begin{:section, title="Caveats"}
 
-When applying `@lazy` to a non-mutable struct, the standard way of mutating it
-via `setproperty!` (the `f.a = b` syntax)  is disabled. However, the struct is
-still considered mutable to Julia and the `setproperty!` can be bypassed:
+When applying `@lazy` to a non-mutable struct that has type parameters, the
+standard way of mutating it via `setproperty!` (the `f.a = b` syntax)  is
+disabled. However, the struct is still considered mutable to Julia and the
+`setproperty!` can be bypassed:
+
+```julia-repl
+julia> @lazy struct Baz{T}
+           a::T
+           @lazy b::Float64
+       end
+
+julia> b = Baz(1, uninit)
+Baz{Int64}(1, uninit)
+
+julia> ismutable(b)
+true
+
+julia> b.a = 2
+ERROR: setproperty! for struct of type `Baz` has been disabled
+[...]
+
+julia> setfield!(b, :a, 2)
+2
+
+julia> b.a
+2
+```
+
+The fact that the struct is considered mutable by Julia also means that it will
+no longer be stored inline in cases where the non `@lazy` version would:
+
+```julia-repl
+julia> isbitstype(Baz{Int})
+false
+```
+
+This has an effect if you would try to pass a `Vector{Foo}` to e.g. C via `ccall`.
+
+However, for immutable structs without type parameters, the type can be kept immutable
+(it's posible to do an optimization in this case):
 
 ```julia-repl
 julia> @lazy struct Foo
@@ -193,26 +230,9 @@ julia> @lazy struct Foo
 julia> f = Foo(1, uninit)
 Foo(1, uninit)
 
-julia> f.a = 2
-ERROR: setproperty! for struct of type `Foo` has been disabled
-[...]
-
 julia> setfield!(f, :a, 2)
-2
-
-julia> f.a
-2
+ERROR: setfield! immutable struct of type Foo cannot be changed
 ```
-
-The fact that the struct is considered mutable by Julia also means that it will
-no longer be stored inline in cases where the non `@lazy` version would:
-
-```julia-repl
-julia> isbitstype(Foo)
-false
-```
-
-This has an effect if you would try to pass a `Vector{Foo}` to e.g. C via `ccall`.
 
 \end{:section}
 
@@ -281,5 +301,18 @@ The convenience macros `@init!`, `@uninit!`, `@isinit` does very simple
 transformations that checks that the field being manipulated is lazy (via
 `islazyfield`) and converts `getproperty` and `setproperty!` to `getfield` and
 `setfield!`.
+
+For immutable structs without type parameters we do an optimization to keep the
+struct mutable and define it as
+
+```
+struct Foo
+    a::Int
+    b::Box{Union{Uninitialized, Int}}
+end
+```
+
+and make the macros, `getproperty` and `setproperty!` unpack and pack the value
+into the `Box` (which is similar to a `Ref`).
 
 \end{:section}
