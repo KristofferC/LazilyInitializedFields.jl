@@ -59,10 +59,37 @@ end
 end
 box = Boxed(1, uninit)
 
+@lazy struct Boxed
+    a::Int
+    @lazy b::Float64
+end
+box = Boxed(1, uninit)
+
 @testset "Boxed" begin
     @test isimmutable(box)
     @test Boxed(1, 1).b === 1.0 # test conversion constructor
     @test !(@isinit box.b)
+    @init! box.b = 2
+    @test @isinit box.b
+    @test box.b == 2
+    @uninit! box.b
+    @test !(@isinit box.b)
+end
+
+@lazy struct BoxedUnion
+    a::Int
+    @lazy b::Union{Missing, Nothing, Int}
+end
+boxed_union = BoxedUnion(1, uninit)
+
+@testset "Boxed" begin
+    @test isimmutable(box)
+    @test !(@isinit box.b)
+    if VERSION >= v"1.2"
+        @test BoxedUnion(1, 2.0).b === 2
+    else
+        @test_broken BoxedUnion(1, 2.0).b === 2
+    end
     @init! box.b = 2
     @test @isinit box.b
     @test box.b == 2

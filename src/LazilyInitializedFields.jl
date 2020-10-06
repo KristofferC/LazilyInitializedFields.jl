@@ -92,7 +92,6 @@ Base.show(io::IO, b::Box) = show(io, b.x)
 
 
 # This is a replication of the Nothing and Missing conversion functionality from Base.
-# nonuninittype(::Type{T}) where {T} = Core.Compiler.typesubtract(T, Uninitialized)
 if isdefined(Base, :typesplit)
     nonuninittype(::Type{T}) where {T} = Base.typesplit(T, Uninitialized)
 else
@@ -113,9 +112,16 @@ function nonuninittype_checked(T::Type)
     return R
 end
 
+# These are awful
 Base.convert(::Type{T}, x::T) where {T>:Uninitialized} = x
 Base.convert(::Type{T}, x) where {T>:Uninitialized} = convert(nonuninittype_checked(T), x)
+Base.convert(::Type{T}, x) where T>:Union{Uninitialized, Nothing} = convert(nonuninittype_checked(T), x)
+Base.convert(::Type{T}, x) where T>:Union{Uninitialized, Missing} = convert(nonuninittype_checked(T), x)
+Base.convert(::Type{T}, x) where T>:Union{Uninitialized, Missing, Nothing} = convert(nonuninittype_checked(T), x)
+# Ambiguity resolution
 Base.convert(::Type{T}, x::T) where T>:Union{LazilyInitializedFields.Uninitialized, Nothing} = x
+Base.convert(::Type{T}, x::T) where T>:Union{LazilyInitializedFields.Uninitialized, Missing} = x
+Base.convert(::Type{T}, x::T) where T>:Union{Nothing, Missing, LazilyInitializedFields.Uninitialized} = x
 
 
 struct NonLazyFieldException <: Exception
@@ -134,8 +140,8 @@ end
 Base.showerror(io::IO, err::UninitializedFieldException) =
     print(io, "field `", err.s, "` in struct of type `$(err.T)` is not initialized")
 
-@inline _setfield!(x, s::Symbol, v) = ismutable(x) ? setfield!(x, s, v) : getfield(x, s)[] = v
-@inline _getfield(x, s::Symbol) = ismutable(x) ? getfield(x, s) : getfield(x, s)[]
+@inline _setfield!(x, s::Symbol, v) = !isimmutable(x) ? setfield!(x, s, v) : getfield(x, s)[] = v
+@inline _getfield(x, s::Symbol) = !isimmutable(x) ? getfield(x, s) : getfield(x, s)[]
 
 """
     init!(a, s::Symbol)
