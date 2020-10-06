@@ -79,7 +79,7 @@ Base.show(io::IO, u::Uninitialized) = print(io, "uninit")
 # islazyfield(::Type{Foo}, s::Symbol) = s === :a || s === :b
 function islazyfield end
 
-# For mutable types without type parameters we create a Box
+# For immutable types without type parameters we create a Box
 # for the lazy fields instead of making the whole struct mutable
 # https://github.com/JuliaLang/julia/issues/35053
 mutable struct Box{T}
