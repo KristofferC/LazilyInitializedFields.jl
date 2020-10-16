@@ -56,4 +56,5 @@ m = Mut(1, uninit)
     @test_throws ErrorException m.b = 2
 end
 
+DocMeta.setdocmeta!(LazilyInitializedFields, :DocTestSetup, :(using LazilyInitializedFields))
 doctest(LazilyInitializedFields; manual=false)

@@ -128,8 +128,6 @@ initialized.
 Macro version of `init!(a, :b, v)`
 
 ```jldoctest
-julia> using LazilyInitializedFields
-
 julia> @lazy struct Foo
            @lazy b::Int
        end
@@ -181,8 +179,6 @@ of `a`.
 Macro version of [`isinit(a, :b)`](@ref)
 
 ```jldoctest
-julia> using LazilyInitializedFields
-
 julia> @lazy struct Foo
            @lazy b::Int
        end
@@ -225,8 +221,6 @@ of `a`.
 Macro version of [`uninit`](@ref)
 
 ```jldoctest
-julia> using LazilyInitializedFields
-
 julia> @lazy struct Foo
            @lazy b::Int
        end
