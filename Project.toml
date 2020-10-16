@@ -1,7 +1,7 @@
 name = "LazilyInitializedFields"
 uuid = "0e77f7df-68c5-4e49-93ce-4cd80f5598bf"
 authors = ["Kristoffer <kcarlsson89@gmail.com> and contributors"]
-version = "1.0.0"
+version = "1.0.1"
 
 [compat]
 julia = "1"

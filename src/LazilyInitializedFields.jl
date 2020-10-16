@@ -54,7 +54,7 @@ module LazilyInitializedFields
 export @lazy, uninit,
        @init!, @isinit, @uninit!,
         init!,  isinit,  uninit!,
-        NonLazyFieldException, UninitializedFieldException
+        NonLazyFieldException, UninitializedFieldException, AlreadyInitializedException
 
 
 """
@@ -96,6 +96,13 @@ end
 Base.showerror(io::IO, err::UninitializedFieldException) =
     print(io, "field `", err.s, "` in struct of type `$(err.T)` is not initialized")
 
+struct AlreadyInitializedException <: Exception
+    T::DataType
+    s::Symbol
+end
+Base.showerror(io::IO, err::AlreadyInitializedException) =
+    print(io, "field `", err.s, "` in struct of type `$(err.T)` already initialized")
+
 
 """
     init!(a, s::Symbol)
@@ -104,6 +111,8 @@ Function version of [@init!](@ref).
 """
 @inline function init!(x::T, s::Symbol, v) where {T}
     islazyfield(T, s) || throw(NonLazyFieldException(T, s))
+    old = getfield(x, s)
+    old isa Uninitialized || throw(AlreadyInitializedException(T, s))
     return setfield!(x, s, v)
 end
 
@@ -114,7 +123,8 @@ _check_setproperty_expr(expr, s) =
 
 Initialize the lazy field `b` in object `a` to `v`.
 Throw a `NonLazyFieldException` if `b` is not a lazy field
-of `a`.
+of `a`. Throw an `AlreadyInitializedException` if `b` is already
+initialized.
 Macro version of `init!(a, :b, v)`
 
 ```jldoctest
@@ -136,6 +146,10 @@ julia> @init! f.b = 3
 
 julia> f.b
 3
+
+julia> @init! f.b = 2
+ERROR: field `b` in struct of type `Foo` already initialized
+[...]
 ```
 """
 macro init!(expr)
@@ -205,7 +219,7 @@ end
 """
     @uninit! f.b
 
-Uninitializes the field `b` in the object `f`
+Uninitialize the field `b` in the object `f`
 Throw a `NonLazyFieldException` if `b` is not a lazy field
 of `a`.
 Macro version of [`uninit`](@ref)
@@ -243,7 +257,7 @@ global in_lazy_struct
         @lazy c::Float64
     end
 
-Make struct `Foo` have the lazy fields `b` and `c`.
+Make a struct `Foo` with the lazy fields `b` and `c`.
 """
 macro lazy(expr)
     if expr isa Expr && expr.head === :struct

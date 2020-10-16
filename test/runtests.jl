@@ -39,8 +39,10 @@ m = Mut(1, uninit)
     @test_throws NonLazyFieldException @init! f.a = 2
     @test_throws NonLazyFieldException @isinit f.a
     @test_throws NonLazyFieldException @uninit! f.a
-    @init! f.c = 2.0
-    @test f.c == 2.0
+    @init! f.b = 2
+    @test_throws AlreadyInitializedException @init! f.b = 2.0
+
+    @test_throws AlreadyInitializedException @init! f.c = 2.0
     @test @isinit(f.c)
     f.c = nothing
     @test f.c == nothing

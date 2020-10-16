@@ -3,3 +3,4 @@
 *.jl.mem
 page/__site
 docs
+Manifest.toml
