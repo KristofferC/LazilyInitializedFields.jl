@@ -5,7 +5,7 @@ A package for handling lazily initialized fields.
 * macros: `@lazy`, `@init!`, `@uninit!`, `@isinit`.
 * functions: `init!` `uninit!`, `isinit`.
 * objects: `uninit`.
-* exceptions: `NonLazyFieldException`, `UninitializedFieldException`
+* exceptions: `NonLazyFieldException`, `UninitializedFieldException`, `AlreadyInitializedException`
 
 ### Example usage:
 
