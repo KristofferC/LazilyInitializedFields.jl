@@ -93,39 +93,12 @@ struct UninitializedFieldException <: Exception
     T::DataType
     s::Symbol
 end
-Base.showerror(io::IO, err::UninitializedFieldException) =
+function Base.showerror(io::IO, err::UninitializedFieldException)
     print(io, "field `", err.s, "` in struct of type `$(err.T)` is not initialized")
-
-"""
-    uninit_field_error(::Type{T}, s::Symbol)::Exception
-
-If a package author wants to display a custom error message when an uninitialized field is
-accessed, they should define a method of the `uninit_field_error` function for their type.
-
-### Example
-
-```julia-repl
-julia> @lazy struct Foo
-           @lazy x::Int
-       end
-
-julia> f = Foo(uninit)
-Foo(uninit)
-
-julia> f.x
-ERROR: field `x` in struct of type `Foo` is not initialized
-[...]
-
-julia> function LazilyInitializedFields.uninit_field_error(::Type{T}, s::Symbol) where {T <: Foo}
-           return ErrorException("My custom error message")
-       end
-
-julia> f.x
-ERROR: My custom error message
-[...]
-```
-"""
-uninit_field_error(::Type{T}, s) where {T} = UninitializedFieldException(T, s)
+    if isdefined(Base.Experimental, :show_error_hints)
+        Base.Experimental.show_error_hints(io, err)
+    end
+end
 
 struct AlreadyInitializedException <: Exception
     T::DataType
@@ -340,7 +313,7 @@ function lazy_struct(expr)
         function Base.getproperty(x::$(esc(structname)), s::Symbol)
             if $(LazilyInitializedFields).islazyfield($(esc(structname)), s)
                 r = Base.getfield(x, s)
-                r isa $Uninitialized && throw(uninit_field_error(typeof(x), s))
+                r isa $Uninitialized && throw(UninitializedFieldException(typeof(x), s))
                 return r
             end
             return Base.getfield(x, s)
