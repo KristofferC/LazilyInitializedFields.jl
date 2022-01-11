@@ -264,7 +264,7 @@ macro lazy(expr)
     elseif expr isa Expr && expr.head === :(::) && length(expr.args) == 2
         return lazy_field(expr)
     else
-        _throw_invalid_usage()
+        error("invalid usage of @lazy macro")
     end
 end
 
