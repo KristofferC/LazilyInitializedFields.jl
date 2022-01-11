@@ -19,6 +19,8 @@ end
 m = Mut(1, uninit)
 
 @testset "LazilyInitializedFields" begin
+    include("util.jl")
+
     @test f.a == 1
     @test_throws UninitializedFieldException f.b
     @test f.c == 2.0
@@ -54,6 +56,8 @@ m = Mut(1, uninit)
 
     @test_throws ErrorException m.a = 2
     @test_throws ErrorException m.b = 2
+
+    include("experimental.jl")
 end
 
 DocMeta.setdocmeta!(LazilyInitializedFields, :DocTestSetup, :(using LazilyInitializedFields))
