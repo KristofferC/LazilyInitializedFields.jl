@@ -18,8 +18,21 @@ f = Foo{Int}(1, uninit, 2.0, uninit, 3.0)
 end
 m = Mut(1, uninit)
 
+# A utility function that takes in a closure, and returns the exception that is thrown when
+# that closure is run.
+function get_thrown_exception(f::Function)
+    threw = false
+    ex = try
+        f()
+    catch ex
+        threw = true
+        ex
+    end
+    threw || throw(ErrorException("no exception was thrown"))
+    return ex
+end
+
 @testset "LazilyInitializedFields" begin
-    include("util.jl")
 
     @test f.a == 1
     @test_throws UninitializedFieldException f.b
