@@ -42,4 +42,3 @@ jobs:
             ${{ runner.os }}-
       - uses: julia-actions/julia-buildpkg@v1
       - run: julia --project=benchmark/ -e 'using Pkg; Pkg.instantiate(); include("benchmark/benchmarks.jl"); run(SUITE)'
-zzz
