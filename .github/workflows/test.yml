@@ -13,7 +13,7 @@ concurrency:
 jobs:
   test:
     timeout-minutes: 60
-    name: Test on Julia ${{ matrix.version }}
+    name: Julia ${{ matrix.version }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -49,34 +49,3 @@ jobs:
       - uses: codecov/codecov-action@v2
         with:
           files: lcov.info
-  benchmark:
-    timeout-minutes: 60
-    name: Benchmark on Julia ${{ matrix.version }}
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        version:
-          - 'nightly'
-        os:
-          - ubuntu-latest
-        arch:
-          - x64
-    steps:
-      - uses: actions/checkout@v2
-      - uses: julia-actions/setup-julia@v1
-        with:
-          version: ${{ matrix.version }}
-          arch: ${{ matrix.arch }}
-      - uses: actions/cache@v1
-        env:
-          cache-name: cache-artifacts
-        with:
-          path: ~/.julia/artifacts
-          key: ${{ runner.os }}-test-${{ env.cache-name }}-${{ hashFiles('**/Project.toml') }}
-          restore-keys: |
-            ${{ runner.os }}-test-${{ env.cache-name }}-
-            ${{ runner.os }}-test-
-            ${{ runner.os }}-
-      - uses: julia-actions/julia-buildpkg@v1
-      - run: julia --project=benchmark/ -e 'using Pkg; Pkg.instantiate(); include("benchmark/benchmarks.jl"); run(SUITE)'
