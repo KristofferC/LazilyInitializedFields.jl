@@ -13,7 +13,7 @@ concurrency:
 jobs:
   test:
     timeout-minutes: 60
-    name: Julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }} - ${{ github.event_name }}
+    name: Test on Julia ${{ matrix.version }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -51,7 +51,7 @@ jobs:
           files: lcov.info
   benchmark:
     timeout-minutes: 60
-    name: Julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }} - ${{ github.event_name }}
+    name: Benchmark on Julia ${{ matrix.version }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
