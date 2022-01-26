@@ -18,7 +18,22 @@ f = Foo{Int}(1, uninit, 2.0, uninit, 3.0)
 end
 m = Mut(1, uninit)
 
+# A utility function that takes in a closure, and returns the exception that is thrown when
+# that closure is run.
+function get_thrown_exception(f::Function)
+    threw = false
+    ex = try
+        f()
+    catch ex
+        threw = true
+        ex
+    end
+    threw || throw(ErrorException("no exception was thrown"))
+    return ex
+end
+
 @testset "LazilyInitializedFields" begin
+
     @test f.a == 1
     @test_throws UninitializedFieldException f.b
     @test f.c == 2.0
@@ -54,6 +69,42 @@ m = Mut(1, uninit)
 
     @test_throws ErrorException m.a = 2
     @test_throws ErrorException m.b = 2
+
+    @testset "Experimental" begin
+        @static if isdefined(Base.Experimental, :register_error_hint)
+            @lazy struct FooExperimental
+                @lazy a::Int
+                @lazy b::Int
+                @lazy c::Int
+            end
+            FooExperimental() = FooExperimental(uninit, uninit, uninit)
+
+            Base.Experimental.register_error_hint(UninitializedFieldException) do io, exc
+                if exc.T === FooExperimental
+                    if exc.s === :b
+                        print(io, "\nThis is a custom hint for the `:b` field of the `Foo` struct")
+                    elseif exc.s === :c
+                        print(io, "\nHere's my `Foo.c` custom hint")
+                    end
+                end
+            end
+
+            test_cases = [
+                (:a, "field `a` in struct of type `FooExperimental` is not initialized",),
+                (:b, "field `b` in struct of type `FooExperimental` is not initialized\nThis is a custom hint for the `:b` field of the `Foo` struct",),
+                (:c, "field `c` in struct of type `FooExperimental` is not initialized\nHere's my `Foo.c` custom hint",),
+            ]
+            for (s, msg) in test_cases
+                my_closure = () -> getproperty(FooExperimental(), s)
+                @test_throws UninitializedFieldException my_closure()
+                ex = get_thrown_exception(my_closure)
+                @test sprint(io -> Base.showerror(io, ex)) == msg
+            end
+        else
+            @warn "Skipping the experimental tests"
+            @test_skip false
+        end
+    end
 end
 
 DocMeta.setdocmeta!(LazilyInitializedFields, :DocTestSetup, :(using LazilyInitializedFields))

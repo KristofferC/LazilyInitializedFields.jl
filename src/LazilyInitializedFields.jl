@@ -93,8 +93,12 @@ struct UninitializedFieldException <: Exception
     T::DataType
     s::Symbol
 end
-Base.showerror(io::IO, err::UninitializedFieldException) =
+function Base.showerror(io::IO, err::UninitializedFieldException)
     print(io, "field `", err.s, "` in struct of type `$(err.T)` is not initialized")
+    @static if isdefined(Base.Experimental, :show_error_hints)
+        Base.Experimental.show_error_hints(io, err)
+    end
+end
 
 struct AlreadyInitializedException <: Exception
     T::DataType
