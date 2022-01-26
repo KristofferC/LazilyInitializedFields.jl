@@ -65,7 +65,14 @@ end
     @test !@isinit(f.c)
     @test_throws UninitializedFieldException f.d
 
-    @test_throws LoadError @macroexpand @lazy a::Int
+    @static if Base.VERSION >= v"1.7-"
+        # On Julia 1.7+, `@macroexpand` will throw the actual exception type.
+        @test_throws ErrorException @macroexpand @lazy a::Int
+    else
+        # On Julia 1.6 and earlier, `@macroexpand` will always throw `LoadError`,
+        # regardless of the actual exception type.
+        @test_throws LoadError @macroexpand @lazy a::Int
+    end
 
     @test_throws ErrorException m.a = 2
     @test_throws ErrorException m.b = 2
