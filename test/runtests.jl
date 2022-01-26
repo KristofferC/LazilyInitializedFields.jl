@@ -71,7 +71,7 @@ end
     @test_throws ErrorException m.b = 2
 
     @testset "Experimental" begin
-        @static if isdefined(Base.Experimental, :register_error_hint)
+        @static if isdefined(Base, :Experimental) && isdefined(Base.Experimental, :register_error_hint)
             @lazy struct FooExperimental
                 @lazy a::Int
                 @lazy b::Int
