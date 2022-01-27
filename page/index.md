@@ -3,7 +3,7 @@
     ============================== -->
 
 
-\begin{:section, title="Lazily initialized fields", name="About"}
+\begin{section}{title="Lazily initialized fields", name="About"}
 
 A lazily initialized field is a field in a struct that starts of uninitialized
 (does not have a value) and at some later point gets initialized. This is useful
@@ -19,18 +19,18 @@ Some goals we want to achieve when using lazy fields:
 5. Not force all fields to be considered mutable just because we want to lazily initialize one field.
 6. Allow checking if a field is initialized.
 
-\end{:section}
+\end{section}
 
-\begin{:section, title="Installation"}
+\begin{section}{title="Installation"}
 
 ```julia
 using Pkg; Pkg.add(url="https://github.com/KristofferC/LazilyInitializedFields.jl")
 ```
 
-\end{:section}
+\end{section}
 
 
-\begin{:section, title="Usage", name="Usage"}
+\begin{section}{title="Usage", name="Usage"}
 
 Let's see a session with LazilyInitializedFields and how these goals are
 fulfilled. We first define a struct with one lazily initialized field.
@@ -101,9 +101,9 @@ true
 Instead of the macros `@init! a.b = 1`, `@isinit a.b` and `@uninit! a.b` one can
 use the function `init(a, :b, 1)`, `isinit(a, :b)` and `uninit!(a, :b)`.
 
-\end{:section}
+\end{section}
 
-\begin{:section, title="Other methods of achieving lazily initialized fields", name="Other methods"}
+\begin{section}{title="Other methods of achieving lazily initialized fields", name="Other methods"}
 
 Let's assume we want to make a struct `Foo` with two `Int` fields, and the
 second field is lazily initialized. Here are some other more or less used
@@ -176,9 +176,9 @@ Body::Union{Nothing, Int64}
 └──      return %1
 ```
 
-\end{:section}
+\end{section}
 
-\begin{:section, title="Caveats"}
+\begin{section}{title="Caveats"}
 
 When applying `@lazy` to a non-mutable struct, the standard way of mutating it
 via `setproperty!` (the `f.a = b` syntax)  is disabled. However, the struct is
@@ -214,11 +214,11 @@ false
 
 This has an effect if you would try to pass a `Vector{Foo}` to e.g. C via `ccall`.
 
-\end{:section}
+\end{section}
 
-\begin{:section, title="Implementation"}
+\begin{section}{title="Implementation"}
 
-The expression 
+The expression
 
 ```julia
 @lazy struct Foo
@@ -282,4 +282,4 @@ transformations that checks that the field being manipulated is lazy (via
 `islazyfield`) and converts `getproperty` and `setproperty!` to `getfield` and
 `setfield!`.
 
-\end{:section}
+\end{section}
