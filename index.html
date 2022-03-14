@@ -168,24 +168,24 @@ padding-right:  10px;
       <div class="col-lg-10 mx-auto">
         <h2>Usage</h2></p>
 <p>Let&#39;s see a session with LazilyInitializedFields and how these goals are fulfilled. We first define a struct with one lazily initialized field. We then create it, using the exported <code>uninit</code> object for the field that should be lazily initialized:</p>
-<pre><code class="julia-repl hljs"><span class="hljs-meta">julia&gt;</span><span class="language-julia"> <span class="hljs-meta">@lazy</span> <span class="hljs-keyword">struct</span> Foo
+<pre><code class="julia-repl hljs"><span class="hljs-meta prompt_">julia&gt;</span><span class="language-julia"> <span class="hljs-meta">@lazy</span> <span class="hljs-keyword">struct</span> Foo
            a::<span class="hljs-built_in">Int</span>
            <span class="hljs-meta">@lazy</span> b::<span class="hljs-built_in">Int</span>
        <span class="hljs-keyword">end</span>
 </span>
-<span class="hljs-meta">julia&gt;</span><span class="language-julia"> f = Foo(<span class="hljs-number">1</span>, uninit)
+<span class="hljs-meta prompt_">julia&gt;</span><span class="language-julia"> f = Foo(<span class="hljs-number">1</span>, uninit)
 </span>Foo(1, uninit)</code></pre>
 <ol>
 <li><p>Accessing a lazily initialized field before it is initialized should error immediately.</p>
 </li>
 </ol>
-<pre><code class="julia-repl hljs"><span class="hljs-meta">julia&gt;</span><span class="language-julia"> f.b
+<pre><code class="julia-repl hljs"><span class="hljs-meta prompt_">julia&gt;</span><span class="language-julia"> f.b
 </span>ERROR: uninitialized field b</code></pre>
 <ol start="2">
 <li><p>Using a lazily initialized field does not interfere with the inferred return value of the field.</p>
 </li>
 </ol>
-<pre><code class="julia-repl hljs"><span class="hljs-meta">julia&gt;</span><span class="language-julia"> <span class="hljs-meta">@code_warntype</span> (f -&gt; f.b)(f)
+<pre><code class="julia-repl hljs"><span class="hljs-meta prompt_">julia&gt;</span><span class="language-julia"> <span class="hljs-meta">@code_warntype</span> (f -&gt; f.b)(f)
 </span>Variables
 #self#::Core.Compiler.Const(var&quot;#1#2&quot;(), false)
 f::Foo
@@ -197,37 +197,37 @@ Body::Int64
 <li><p>The struct should act as similar as possible to the equivalent normal struct when the struct is fully initialized.</p>
 </li>
 </ol>
-<pre><code class="julia-repl hljs"><span class="hljs-meta">julia&gt;</span><span class="language-julia"> <span class="hljs-meta">@init</span>! f.b = <span class="hljs-number">2</span>
+<pre><code class="julia-repl hljs"><span class="hljs-meta prompt_">julia&gt;</span><span class="language-julia"> <span class="hljs-meta">@init</span>! f.b = <span class="hljs-number">2</span>
 </span>2
 
-<span class="hljs-meta">julia&gt;</span><span class="language-julia"> f.b
+<span class="hljs-meta prompt_">julia&gt;</span><span class="language-julia"> f.b
 </span>2</code></pre>
 <ol start="4">
 <li><p>Make it possible to uninitialize a field after it has been initializd if the value for example becomes invalidated.</p>
 </li>
 </ol>
-<pre><code class="julia-repl hljs"><span class="hljs-meta">julia&gt;</span><span class="language-julia"> <span class="hljs-meta">@uninit</span>! f.b
+<pre><code class="julia-repl hljs"><span class="hljs-meta prompt_">julia&gt;</span><span class="language-julia"> <span class="hljs-meta">@uninit</span>! f.b
 </span>uninit
 
-<span class="hljs-meta">julia&gt;</span><span class="language-julia"> f.b
+<span class="hljs-meta prompt_">julia&gt;</span><span class="language-julia"> f.b
 </span>ERROR: uninitialized field b</code></pre>
 <ol start="5">
 <li><p>Not force all fields to be considered mutable just because we want to lazily initialize one field.</p>
 </li>
 </ol>
-<pre><code class="julia-repl hljs"><span class="hljs-meta">julia&gt;</span><span class="language-julia"> f.a = <span class="hljs-number">2</span>
+<pre><code class="julia-repl hljs"><span class="hljs-meta prompt_">julia&gt;</span><span class="language-julia"> f.a = <span class="hljs-number">2</span>
 </span>ERROR: setproperty! for struct of type `Foo` has been disabled</code></pre>
 <ol start="6">
 <li><p>Allow checking if a field is initialized.</p>
 </li>
 </ol>
-<pre><code class="julia-repl hljs"><span class="hljs-meta">julia&gt;</span><span class="language-julia"> <span class="hljs-meta">@isinit</span> f.b
+<pre><code class="julia-repl hljs"><span class="hljs-meta prompt_">julia&gt;</span><span class="language-julia"> <span class="hljs-meta">@isinit</span> f.b
 </span>false
 
-<span class="hljs-meta">julia&gt;</span><span class="language-julia"> <span class="hljs-meta">@init</span>! f.b = <span class="hljs-number">2</span>
+<span class="hljs-meta prompt_">julia&gt;</span><span class="language-julia"> <span class="hljs-meta">@init</span>! f.b = <span class="hljs-number">2</span>
 </span>2
 
-<span class="hljs-meta">julia&gt;</span><span class="language-julia"> <span class="hljs-meta">@isinit</span> f.b
+<span class="hljs-meta prompt_">julia&gt;</span><span class="language-julia"> <span class="hljs-meta">@isinit</span> f.b
 </span>true</code></pre>
 <p>Instead of the macros <code>@init&#33; a.b &#61; 1</code>, <code>@isinit a.b</code> and <code>@uninit&#33; a.b</code> one can use the function <code>init&#40;a, :b, 1&#41;</code>, <code>isinit&#40;a, :b&#41;</code> and <code>uninit&#33;&#40;a, :b&#41;</code>.</p>
 <p>      </div>
@@ -242,33 +242,33 @@ Body::Int64
 <p>Let&#39;s assume we want to make a struct <code>Foo</code> with two <code>Int</code> fields, and the second field is lazily initialized. Here are some other more or less used methods other than using LazilyInitializedFields.jl:</p>
 <h4>Use a <code>::Ref{T}</code> field</h4>
 <p>This does not work for <code>isbitstype</code> fields and we also need to use <code>&#91;&#93;</code> to access the value, thus, failing points 1 and 3 above.</p>
-<pre><code class="julia-repl hljs"><span class="hljs-meta">julia&gt;</span><span class="language-julia"> <span class="hljs-keyword">mutable struct</span> Foo
+<pre><code class="julia-repl hljs"><span class="hljs-meta prompt_">julia&gt;</span><span class="language-julia"> <span class="hljs-keyword">mutable struct</span> Foo
            a::<span class="hljs-built_in">Int</span>
            b::<span class="hljs-built_in">Ref</span>{<span class="hljs-built_in">Int</span>}
        <span class="hljs-keyword">end</span>
 </span>
-<span class="hljs-meta">julia&gt;</span><span class="language-julia"> Foo(a) = Foo(a, <span class="hljs-built_in">Ref</span>{<span class="hljs-built_in">Int</span>}());
+<span class="hljs-meta prompt_">julia&gt;</span><span class="language-julia"> Foo(a) = Foo(a, <span class="hljs-built_in">Ref</span>{<span class="hljs-built_in">Int</span>}());
 </span>
-<span class="hljs-meta">julia&gt;</span><span class="language-julia"> f = Foo(<span class="hljs-number">1</span>)
+<span class="hljs-meta prompt_">julia&gt;</span><span class="language-julia"> f = Foo(<span class="hljs-number">1</span>)
 </span>Foo(1, Base.RefValue{Int64}(4764233584))
 
-<span class="hljs-meta">julia&gt;</span><span class="language-julia"> f.b
+<span class="hljs-meta prompt_">julia&gt;</span><span class="language-julia"> f.b
 </span>Base.RefValue{Int64}(4764233584)
 
-<span class="hljs-meta">julia&gt;</span><span class="language-julia"> f.b[]
+<span class="hljs-meta prompt_">julia&gt;</span><span class="language-julia"> f.b[]
 </span>4764233584</code></pre>
 <h4>Make struct mutable together with <code>new</code> initialization</h4>
 <p>This also does not work for <code>isbitstype</code> and for non-<code>isbitstype</code> we cannot uninitialize the field, failing points 1, 4 and 5 above.</p>
-<pre><code class="julia-repl hljs"><span class="hljs-meta">julia&gt;</span><span class="language-julia"> <span class="hljs-keyword">mutable struct</span> Foo
+<pre><code class="julia-repl hljs"><span class="hljs-meta prompt_">julia&gt;</span><span class="language-julia"> <span class="hljs-keyword">mutable struct</span> Foo
            a::<span class="hljs-built_in">Int</span>
            b::<span class="hljs-built_in">Int</span>
            Foo(a) = new(a)
        <span class="hljs-keyword">end</span>
 </span>
-<span class="hljs-meta">julia&gt;</span><span class="language-julia"> f = Foo(<span class="hljs-number">1</span>)
+<span class="hljs-meta prompt_">julia&gt;</span><span class="language-julia"> f = Foo(<span class="hljs-number">1</span>)
 </span>Foo(1, 29548)
 
-<span class="hljs-meta">julia&gt;</span><span class="language-julia"> f.b
+<span class="hljs-meta prompt_">julia&gt;</span><span class="language-julia"> f.b
 </span>29548</code></pre>
 <h4>Make struct mutable and use a <code>Union{T, Nothing}</code></h4>
 <p>Accessing this field will not error when it is uninitialized and will infer as a union when the field is accessed, failing points 1, 2 and 5 above.</p>
@@ -300,25 +300,25 @@ Body::<span class="hljs-built_in">Union</span>{<span class="hljs-built_in">Nothi
       <div class="col-lg-10 mx-auto">
         <h2>Caveats</h2></p>
 <p>When applying <code>@lazy</code> to a non-mutable struct, the standard way of mutating it via <code>setproperty&#33;</code> &#40;the <code>f.a &#61; b</code> syntax&#41;  is disabled. However, the struct is still considered mutable to Julia and the <code>setproperty&#33;</code> can be bypassed:</p>
-<pre><code class="julia-repl hljs"><span class="hljs-meta">julia&gt;</span><span class="language-julia"> <span class="hljs-meta">@lazy</span> <span class="hljs-keyword">struct</span> Foo
+<pre><code class="julia-repl hljs"><span class="hljs-meta prompt_">julia&gt;</span><span class="language-julia"> <span class="hljs-meta">@lazy</span> <span class="hljs-keyword">struct</span> Foo
            a::<span class="hljs-built_in">Int</span>
            <span class="hljs-meta">@lazy</span> b::<span class="hljs-built_in">Int</span>
        <span class="hljs-keyword">end</span>
 </span>
-<span class="hljs-meta">julia&gt;</span><span class="language-julia"> f = Foo(<span class="hljs-number">1</span>, uninit)
+<span class="hljs-meta prompt_">julia&gt;</span><span class="language-julia"> f = Foo(<span class="hljs-number">1</span>, uninit)
 </span>Foo(1, uninit)
 
-<span class="hljs-meta">julia&gt;</span><span class="language-julia"> f.a = <span class="hljs-number">2</span>
+<span class="hljs-meta prompt_">julia&gt;</span><span class="language-julia"> f.a = <span class="hljs-number">2</span>
 </span>ERROR: setproperty! for struct of type `Foo` has been disabled
 [...]
 
-<span class="hljs-meta">julia&gt;</span><span class="language-julia"> setfield!(f, :a, <span class="hljs-number">2</span>)
+<span class="hljs-meta prompt_">julia&gt;</span><span class="language-julia"> setfield!(f, :a, <span class="hljs-number">2</span>)
 </span>2
 
-<span class="hljs-meta">julia&gt;</span><span class="language-julia"> f.a
+<span class="hljs-meta prompt_">julia&gt;</span><span class="language-julia"> f.a
 </span>2</code></pre>
 <p>The fact that the struct is considered mutable by Julia also means that it will no longer be stored inline in cases where the non <code>@lazy</code> version would:</p>
-<pre><code class="julia-repl hljs"><span class="hljs-meta">julia&gt;</span><span class="language-julia"> isbitstype(Foo)
+<pre><code class="julia-repl hljs"><span class="hljs-meta prompt_">julia&gt;</span><span class="language-julia"> isbitstype(Foo)
 </span>false</code></pre>
 <p>This has an effect if you would try to pass a <code>Vector&#123;Foo&#125;</code> to e.g. C via <code>ccall</code>.</p>
 <p>      </div>
