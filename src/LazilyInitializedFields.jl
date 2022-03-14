@@ -3,7 +3,7 @@ A package for handling lazily initialized fields.
 
 ### Exports:
 * macros: `@lazy`, `@init!`, `@uninit!`, `@isinit`.
-* functions: `init!` `uninit!`, `isinit`.
+* functions: `init!` `uninit!`, `isinit`, `islazyfield`.
 * objects: `uninit`.
 * exceptions: `NonLazyFieldException`, `UninitializedFieldException`, `AlreadyInitializedException`
 
@@ -53,7 +53,7 @@ module LazilyInitializedFields
 
 export @lazy, uninit,
        @init!, @isinit, @uninit!,
-        init!,  isinit,  uninit!,
+        init!,  isinit,  uninit!, islazyfield,
         NonLazyFieldException, UninitializedFieldException, AlreadyInitializedException
 
 
