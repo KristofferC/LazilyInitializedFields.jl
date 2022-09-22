@@ -5,7 +5,7 @@
 
 \begin{section}{title="Lazily initialized fields", name="About"}
 
-A lazily initialized field is a field in a struct that starts of uninitialized
+A lazily initialized field is a field in a struct that starts off uninitialized
 (does not have a value) and at some later point gets initialized. This is useful
 when the value of this field is computed on-demand (lazily).
 
