@@ -261,7 +261,7 @@ macro lazy(expr)
     if expr isa Expr && expr.head === :struct
         try
             global in_lazy_struct = true
-            return lazy_struct(expr)
+            return lazy_struct(expr, __module__)
         finally
             global in_lazy_struct = false
         end
@@ -279,7 +279,7 @@ function lazy_field(expr)
     :($(esc(name))::Union{$Uninitialized, $(esc(T))})
 end
 
-function lazy_struct(expr)
+function lazy_struct(expr, mod)
     mutable, structdef, body = expr.args
     structname = if structdef isa Symbol
         structdef
@@ -293,7 +293,7 @@ function lazy_struct(expr)
     lazyfield = QuoteNode[]
     for (i, arg) in enumerate(body.args)
         if arg isa Expr && arg.head === :macrocall && arg.args[1] === Symbol("@lazy")
-            body.args[i] = macroexpand($__module__, arg)
+            body.args[i] = macroexpand(mod, arg)
             name = body.args[i].args[1]
             @assert name isa Symbol
             push!(lazyfield, QuoteNode(name))
