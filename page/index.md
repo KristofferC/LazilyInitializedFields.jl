@@ -24,7 +24,7 @@ Some goals we want to achieve when using lazy fields:
 \begin{section}{title="Installation"}
 
 ```julia
-using Pkg; Pkg.add(url="https://github.com/KristofferC/LazilyInitializedFields.jl")
+using Pkg; Pkg.add("LazilyInitializedFields")
 ```
 
 \end{section}
