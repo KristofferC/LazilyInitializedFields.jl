@@ -2,6 +2,9 @@ using LazilyInitializedFields
 const LI = LazilyInitializedFields
 using Documenter
 
+@show typeof(stdout)
+@show typeof(stderr)
+
 using Test
 @lazy mutable struct Foo{T}
     a::T
