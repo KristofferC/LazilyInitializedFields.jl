@@ -132,7 +132,7 @@ padding-right:  10px;
     <div class="row">
       <div class="col-lg-10 mx-auto">
         <h2>Lazily initialized fields</h2></p>
-<p>A lazily initialized field is a field in a struct that starts of uninitialized &#40;does not have a value&#41; and at some later point gets initialized. This is useful when the value of this field is computed on-demand &#40;lazily&#41;.</p>
+<p>A lazily initialized field is a field in a struct that starts off uninitialized &#40;does not have a value&#41; and at some later point gets initialized. This is useful when the value of this field is computed on-demand &#40;lazily&#41;.</p>
 <p>Some goals we want to achieve when using lazy fields:</p>
 <ol>
 <li><p>Accessing a lazily initialized field before it is initialized should error immediately.</p>
