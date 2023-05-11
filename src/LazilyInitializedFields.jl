@@ -247,7 +247,6 @@ macro uninit!(expr)
     return :(uninit!($(esc.(expr.args)...)))
 end
 
-global in_lazy_struct
 """
     @lazy struct Foo
         a::Int
@@ -259,14 +258,9 @@ Make a struct `Foo` with the lazy fields `b` and `c`.
 """
 macro lazy(expr)
     if expr isa Expr && expr.head === :struct
-        try
-            global in_lazy_struct = true
-            return lazy_struct(expr, __module__)
-        finally
-            global in_lazy_struct = false
-        end
+        return lazy_struct(expr, __module__)
     elseif expr isa Expr && expr.head === :(::) && length(expr.args) == 2
-        return lazy_field(expr)
+        error("@lazy macro use outside of @lazy struct")
     else
         error("invalid usage of @lazy macro")
     end
@@ -274,9 +268,11 @@ end
 
 function lazy_field(expr)
     # expr is checked for correct form in @lazy
-    in_lazy_struct || error("@lazy macro use outside of @lazy struct")
+    if !(expr isa Expr && expr.head === :(::) && length(expr.args) == 2)
+        error("invalid usage of @lazy macro")
+    end
     name, T = expr.args
-    :($(esc(name))::Union{$Uninitialized, $(esc(T))})
+    name, :($(esc(name))::Union{Uninitialized, $(esc(T))})
 end
 
 function lazy_struct(expr, mod)
@@ -295,9 +291,8 @@ function lazy_struct(expr, mod)
     expr.args[1] = true # make mutable
     lazyfield = QuoteNode[]
     for (i, arg) in enumerate(body.args)
-        if arg isa Expr && arg.head === :macrocall && arg.args[1] === Symbol("@lazy")
-            body.args[i] = macroexpand(mod, arg)
-            name = body.args[i].args[1]
+        if arg isa Expr && arg.head === :macrocall && length(arg.args) == 3 && arg.args[1] === Symbol("@lazy")
+            name, body.args[i] = lazy_field(mod, arg.args[3])
             @assert name isa Symbol
             push!(lazyfield, QuoteNode(name))
         end
@@ -311,8 +306,7 @@ function lazy_struct(expr, mod)
     ret = Expr(:block)
     push!(ret.args, quote
         $(esc(expr))
-        # is @pure overkill?
-        Base.@pure $(LazilyInitializedFields).islazyfield(::Type{<:$(esc(structname))}, s::Symbol) = $checks
+        $(LazilyInitializedFields).islazyfield(::Type{<:$(esc(structname))}, s::Symbol) = $checks
         function Base.getproperty(x::$(esc(structname)), s::Symbol)
             if $(LazilyInitializedFields).islazyfield($(esc(structname)), s)
                 r = Base.getfield(x, s)
