@@ -286,8 +286,8 @@ function lazy_struct(expr, mod)
     elseif structdef isa Expr && structdef.head === :curly
         structdef.args[1]
     elseif structdef isa Expr && structdef.head === :<:
-        structdef.args[1]
-        structdef.args[2]
+        subtype = structdef.args[1]
+        (subtype isa Symbol) ? subtype : subtype.args[1]
     else
         error("internal error: unhandled expression $expr")
     end

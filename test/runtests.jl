@@ -19,6 +19,7 @@ end
 m = Mut(1, uninit)
 
 abstract type TestType end
+abstract type ParamTestType{T} end
 
 # A utility function that takes in a closure, and returns the exception that is thrown when
 # that closure is run.
@@ -70,6 +71,14 @@ end
     end)
     b = Bar{Int}(1, uninit)
     @test b.a == 1
+    @test_throws UninitializedFieldException b.b
+
+    @test @no_error (@lazy struct Baz{T} <: ParamTestType{T}
+        a::T
+        @lazy b::Vector{T}
+    end)
+    b = Baz{Float64}(1.0, uninit)
+    @test b.a == 1.0
     @test_throws UninitializedFieldException b.b
 
     @test LI.islazyfield.(Foo, (:a, :b, :c, :d, :e)) == (false, true, true, true, false)
