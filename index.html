@@ -141,7 +141,7 @@ padding-right:  10px;
 </li>
 <li><p>The struct should act as similar as possible to the equivalent normal struct when the struct is fully initialized.</p>
 </li>
-<li><p>Make it possible to uninitialize a field after it has been initializd if the value becomes invalidated for some reason.</p>
+<li><p>Make it possible to uninitialize a field after it has been initialized if the value becomes invalidated for some reason.</p>
 </li>
 <li><p>Not force all fields to be considered mutable just because we want to lazily initialize one field.</p>
 </li>
@@ -203,7 +203,7 @@ Body::Int64
 <span class="hljs-meta prompt_">julia&gt;</span><span class="language-julia"> f.b
 </span>2</code></pre>
 <ol start="4">
-<li><p>Make it possible to uninitialize a field after it has been initializd if the value for example becomes invalidated.</p>
+<li><p>Make it possible to uninitialize a field after it has been initialized if the value for example becomes invalidated.</p>
 </li>
 </ol>
 <pre><code class="julia-repl hljs"><span class="hljs-meta prompt_">julia&gt;</span><span class="language-julia"> <span class="hljs-meta">@uninit</span>! f.b
