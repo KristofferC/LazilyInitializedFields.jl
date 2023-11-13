@@ -292,7 +292,7 @@ function lazy_struct(expr, mod)
     lazyfield = QuoteNode[]
     for (i, arg) in enumerate(body.args)
         if arg isa Expr && arg.head === :macrocall && length(arg.args) == 3 && arg.args[1] === Symbol("@lazy")
-            name, body.args[i] = lazy_field(mod, arg.args[3])
+            name, body.args[i] = lazy_field(arg.args[3])
             @assert name isa Symbol
             push!(lazyfield, QuoteNode(name))
         end
