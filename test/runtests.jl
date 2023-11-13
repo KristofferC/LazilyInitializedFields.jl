@@ -18,6 +18,9 @@ f = Foo{Int}(1, uninit, 2.0, uninit, 3.0)
 end
 m = Mut(1, uninit)
 
+abstract type TestType end
+abstract type ParamTestType{T} end
+
 # A utility function that takes in a closure, and returns the exception that is thrown when
 # that closure is run.
 function get_thrown_exception(f::Function)
@@ -30,6 +33,19 @@ function get_thrown_exception(f::Function)
     end
     threw || throw(ErrorException("no exception was thrown"))
     return ex
+end
+
+# A utility macro to check if the lazy, supertyped, structure initializes without error
+# https://github.com/JuliaLang/julia/issues/18780#issuecomment-251534863
+macro no_error(ex)
+    quote
+        try
+            $(esc(ex))
+            true
+        catch
+            false
+        end
+    end
 end
 
 @testset "LazilyInitializedFields" begin
@@ -48,6 +64,22 @@ end
     @test rt((f -> f.c), Tuple{Foo}) == Union{Float64, Nothing}
     @test rt((f -> f.d), Tuple{Foo}) == Union{Int, Nothing}
     @test rt((f -> f.e), Tuple{Foo}) == Float64
+
+    @test @no_error (@lazy struct Bar{T} <: TestType
+        a::T
+        @lazy b::Vector{T}
+    end)
+    b = Bar{Int}(1, uninit)
+    @test b.a == 1
+    @test_throws UninitializedFieldException b.b
+
+    @test @no_error (@lazy struct Baz{T} <: ParamTestType{T}
+        a::T
+        @lazy b::Vector{T}
+    end)
+    b = Baz{Float64}(1.0, uninit)
+    @test b.a == 1.0
+    @test_throws UninitializedFieldException b.b
 
     @test LI.islazyfield.(Foo, (:a, :b, :c, :d, :e)) == (false, true, true, true, false)
 
