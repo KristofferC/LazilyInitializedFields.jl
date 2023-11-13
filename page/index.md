@@ -15,7 +15,7 @@ Some goals we want to achieve when using lazy fields:
 2. Using a lazily initialized field does not interfere with the inferred return
    value of the field.
 3. The struct should act as similar as possible to the equivalent normal struct when the struct is fully initialized.
-4. Make it possible to uninitialize a field after it has been initializd if the value becomes invalidated for some reason.
+4. Make it possible to uninitialize a field after it has been initialized if the value becomes invalidated for some reason.
 5. Not force all fields to be considered mutable just because we want to lazily initialize one field.
 6. Allow checking if a field is initialized.
 
@@ -72,7 +72,7 @@ julia> @init! f.b = 2
 julia> f.b
 2
   ```
-4. Make it possible to uninitialize a field after it has been initializd if the value for example becomes invalidated.
+4. Make it possible to uninitialize a field after it has been initialized if the value for example becomes invalidated.
   ```julia-repl
 julia> @uninit! f.b
 uninit
