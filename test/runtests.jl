@@ -9,8 +9,10 @@ using Test
     @lazy c::Union{Float64, Nothing}
     @lazy d::Union{Int, Nothing}
     e::Float64
+    const @lazy f::Int
 end
-f = Foo{Int}(1, uninit, 2.0, uninit, 3.0)
+f = Foo{Int}(1, uninit, 2.0, uninit, 3.0, 1)
+f2 = Foo{Int}(1, uninit, 2.0, uninit, 3.0, uninit)
 
 @lazy struct Mut{T}
     a::T
@@ -56,6 +58,8 @@ end
     @test_throws UninitializedFieldException f.d
     @test f.e == 3.0
     @test f.e == 3.0
+    @test f.f == 1
+    @test_throws UninitializedFieldException f2.f
 
     # @test map(i->@isinit(f.$i), (:a, :b, :c, :d, :e)) == (true, false, true, false, true)
     rt = Core.Compiler.return_type
@@ -96,6 +100,8 @@ end
     @uninit! f.c
     @test !@isinit(f.c)
     @test_throws UninitializedFieldException f.d
+    @test_throws ErrorException f.f = 2
+    @test_throws ErrorException f2.f = 2
 
     @static if Base.VERSION >= v"1.7-"
         # On Julia 1.7+, `@macroexpand` will throw the actual exception type.
