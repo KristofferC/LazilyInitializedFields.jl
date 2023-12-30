@@ -295,6 +295,14 @@ function lazy_struct(expr, mod)
     expr.args[1] = true # make mutable
     lazyfield = QuoteNode[]
     for (i, arg) in enumerate(body.args)
+        if arg isa Expr && arg.head === :const
+            if arg.args[1] isa Expr && arg.args[1].args[1] === Symbol("@lazy")
+                arg.args[1] = macroexpand(mod, arg.args[1])
+                name = body.args[i].args[1].args[1]
+                @assert name isa Symbol
+                push!(lazyfield, QuoteNode(name))
+            end
+        end
         if arg isa Expr && arg.head === :macrocall && arg.args[1] === Symbol("@lazy")
             body.args[i] = macroexpand(mod, arg)
             name = body.args[i].args[1]
