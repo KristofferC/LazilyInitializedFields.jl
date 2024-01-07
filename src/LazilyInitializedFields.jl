@@ -310,7 +310,7 @@ function lazy_struct(expr, mod)
     checks = foldr((a,b)->:(s === $a || $b), lazyfield[1:end-1]; init=:(s === $(lazyfield[end])))
     ret = Expr(:block)
     push!(ret.args, quote
-        $(esc(expr))
+        Base.@__doc__  $(esc(expr))
         # is @pure overkill?
         Base.@pure $(LazilyInitializedFields).islazyfield(::Type{<:$(esc(structname))}, s::Symbol) = $checks
         function Base.getproperty(x::$(esc(structname)), s::Symbol)
