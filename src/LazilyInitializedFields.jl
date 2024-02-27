@@ -272,7 +272,7 @@ function lazy_field(expr)
         error("invalid usage of @lazy macro")
     end
     name, T = expr.args
-    name, :($(esc(name))::Union{Uninitialized, $(esc(T))})
+    name, :($(name)::$LazilyInitializedFields.Union{$LazilyInitializedFields.Uninitialized, $T})
 end
 
 function lazy_struct(expr, mod)
