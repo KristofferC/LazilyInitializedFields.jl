@@ -3,6 +3,10 @@ const LI = LazilyInitializedFields
 using Documenter
 
 using Test
+
+"""
+This is a docstring.
+"""
 @lazy mutable struct Foo{T}
     a::T
     @lazy b::Int
@@ -108,6 +112,8 @@ end
 
     @test_throws ErrorException m.a = 2
     @test_throws ErrorException m.b = 2
+
+    @test string(@doc Foo) == "This is a docstring.\n"
 
     @testset "Experimental" begin
         @static if isdefined(Base, :Experimental) && isdefined(Base.Experimental, :register_error_hint)
