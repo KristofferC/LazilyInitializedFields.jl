@@ -1,8 +1,8 @@
+using Test
+using Documenter
 using LazilyInitializedFields
 const LI = LazilyInitializedFields
-using Documenter
 
-using Test
 @lazy mutable struct Foo{T}
     a::T
     @lazy b::Int
