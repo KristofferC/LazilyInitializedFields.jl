@@ -48,7 +48,7 @@ macro no_error(ex)
     end
 end
 
-@testset "LazilyInitializedFields" begin
+@time @testset "LazilyInitializedFields" begin
 
     @test f.a == 1
     @test_throws UninitializedFieldException f.b
@@ -147,4 +147,4 @@ end
 end
 
 DocMeta.setdocmeta!(LazilyInitializedFields, :DocTestSetup, :(using LazilyInitializedFields))
-doctest(LazilyInitializedFields; manual=false)
+@time doctest(LazilyInitializedFields; manual=false)
