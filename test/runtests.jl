@@ -1,8 +1,8 @@
+using Test
+using Documenter
 using LazilyInitializedFields
 const LI = LazilyInitializedFields
-using Documenter
 
-using Test
 @lazy mutable struct Foo{T}
     a::T
     @lazy b::Int
@@ -48,7 +48,7 @@ macro no_error(ex)
     end
 end
 
-@testset "LazilyInitializedFields" begin
+@time @testset "LazilyInitializedFields" begin
 
     @test f.a == 1
     @test_throws UninitializedFieldException f.b
@@ -147,4 +147,4 @@ end
 end
 
 DocMeta.setdocmeta!(LazilyInitializedFields, :DocTestSetup, :(using LazilyInitializedFields))
-doctest(LazilyInitializedFields; manual=false)
+@time doctest(LazilyInitializedFields; manual=false)
