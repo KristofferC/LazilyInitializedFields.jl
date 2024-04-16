@@ -1,8 +1,9 @@
-using LazilyInitializedFields
-const LI = LazilyInitializedFields
+using Test
 using Documenter
 
-using Test
+using LazilyInitializedFields
+const LI = LazilyInitializedFields
+
 @lazy mutable struct Foo{T}
     a::T
     @lazy b::Int
