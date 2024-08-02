@@ -27,6 +27,14 @@ abstract type ParamTestType{T} end
     @lazy c::Float64 = c_initializer
 end
 
+function c_initializer(x::AccessInit)
+    if @isinit x.b
+        return x.b^2 |> Float64
+    else
+        return uninit
+    end
+end
+
 # A utility function that takes in a closure, and returns the exception that is thrown when
 # that closure is run.
 function get_thrown_exception(f::Function)
