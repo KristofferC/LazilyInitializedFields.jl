@@ -21,6 +21,12 @@ m = Mut(1, uninit)
 abstract type TestType end
 abstract type ParamTestType{T} end
 
+@lazy struct AccessInit
+    a::Float64
+    @lazy b::Int
+    @lazy c::Float64 = c_initializer
+end
+
 # A utility function that takes in a closure, and returns the exception that is thrown when
 # that closure is run.
 function get_thrown_exception(f::Function)
@@ -108,6 +114,15 @@ end
 
     @test_throws ErrorException m.a = 2
     @test_throws ErrorException m.b = 2
+
+    ai = AccessInit(1.0, uninit, uninit)
+    @test ai.a == 1.0
+    @test_throws UninitializedFieldException ai.b
+    @test_throws UninitializedFieldException ai.c
+    @init! ai.b = 2
+    @test ai.b == 2
+    @test ai.c == 4.0
+    @test getfield(ai, :c) == 4.0
 
     @testset "Experimental" begin
         @static if isdefined(Base, :Experimental) && isdefined(Base.Experimental, :register_error_hint)
