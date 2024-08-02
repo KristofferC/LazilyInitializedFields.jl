@@ -268,11 +268,22 @@ end
 
 function lazy_field(expr)
     # expr is checked for correct form in @lazy
-    if !(expr isa Expr && expr.head === :(::) && length(expr.args) == 2)
+    if expr isa Expr && expr.head === :(::) && length(expr.args) == 2
+        lazy_field_no_initializer(expr)
+    elseif expr isa Expr && expr.head === :(=) && length(expr.args) == 2
+        lazy_field_with_initializer(expr)
+    else
         error("invalid usage of @lazy macro")
     end
+end
+
+function lazy_field_no_initializer(expr)
     name, T = expr.args
     name, :($(name)::$LazilyInitializedFields.Union{$LazilyInitializedFields.Uninitialized, $T})
+end
+
+function lazy_field_with_initializer(expr)
+    lazy_field_no_initializer(expr.args[1])
 end
 
 function lazy_struct(expr, mod)
