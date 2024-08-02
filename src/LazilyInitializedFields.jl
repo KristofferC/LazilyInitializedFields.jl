@@ -319,10 +319,6 @@ function lazy_struct(expr, mod)
     end
 
     checks = foldr((a,b)->:(s === $a || $b), lazyfield[1:end-1]; init=:(s === $(lazyfield[end])))
-    # initializers_dict_args = Expr(
-    #     :block,
-    #     [:($i => $(esc(j))) for (i,j) in pairs(initializers)]...
-    #     )
     initializers_dict_args = [:($(QuoteNode(i)) => $(esc(j))) for (i,j) in pairs(initializers)]
     ret = Expr(:block)
     push!(ret.args, quote
@@ -331,7 +327,7 @@ function lazy_struct(expr, mod)
         function Base.getproperty(x::$(esc(structname)), s::Symbol)
             if $(LazilyInitializedFields).islazyfield($(esc(structname)), s)
                 r = Base.getfield(x, s)
-                if r isa $Uninitialized && s in $(keys(initializers))
+                if r isa $Uninitialized && s in $(Tuple(keys(initializers)))
                     r = Dict($(initializers_dict_args...))[s](x)
                     setfield!(x, s, r)
                 end
