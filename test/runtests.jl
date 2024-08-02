@@ -127,6 +127,11 @@ end
     @test ai.a == 1.0
     @test_throws UninitializedFieldException ai.b
     @test_throws UninitializedFieldException ai.c
+
+    @test rt((f -> f.a), Tuple{AccessInit}) == Float64
+    @test rt((f -> f.b), Tuple{AccessInit}) == Int
+    @test rt((f -> f.c), Tuple{AccessInit}) == Float64
+
     @init! ai.b = 2
     @test ai.b == 2
     @test ai.c == 4.0
