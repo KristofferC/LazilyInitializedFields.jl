@@ -315,7 +315,7 @@ function lazy_struct(expr, mod)
             name, body.args[i], initializer = lazy_field(arg.args[3])
             @assert name isa Symbol
             push!(lazyfield, QuoteNode(name))
-            if !isnothing(initializer)
+            if !(initializer === nothing)
                 initializers[name] = initializer
             end
         end
