@@ -268,11 +268,30 @@ end
 
 function lazy_field(expr)
     # expr is checked for correct form in @lazy
-    if !(expr isa Expr && expr.head === :(::) && length(expr.args) == 2)
+    if expr isa Expr && expr.head === :(::) && length(expr.args) == 2
+        lazy_field_no_initializer(expr)
+    elseif expr isa Expr && expr.head === :(=) && length(expr.args) == 2
+        lazy_field_with_initializer(expr)
+    else
         error("invalid usage of @lazy macro")
     end
+end
+
+function lazy_field_no_initializer(expr)
     name, T = expr.args
-    name, :($(name)::$LazilyInitializedFields.Union{$LazilyInitializedFields.Uninitialized, $T})
+    name, :($(name)::$LazilyInitializedFields.Union{$LazilyInitializedFields.Uninitialized, $T}), nothing
+end
+
+function lazy_field_with_initializer(expr)
+    name, args, _ = lazy_field_no_initializer(expr.args[1])
+    initializer = expr.args[2]
+    if initializer == :uninit || !(initializer isa Symbol)
+        # in this case the initializer is not a function but a value
+        # rewrite args in way that is compatible with @kwdef
+        args = :($args = $initializer)
+        initializer = nothing
+    end
+    return name, args, initializer
 end
 
 function lazy_struct(expr, mod)
@@ -290,11 +309,15 @@ function lazy_struct(expr, mod)
 
     expr.args[1] = true # make mutable
     lazyfield = QuoteNode[]
+    initializers = Dict{Symbol, Symbol}()
     for (i, arg) in enumerate(body.args)
         if arg isa Expr && arg.head === :macrocall && length(arg.args) == 3 && arg.args[1] === Symbol("@lazy")
-            name, body.args[i] = lazy_field(arg.args[3])
+            name, body.args[i], initializer = lazy_field(arg.args[3])
             @assert name isa Symbol
             push!(lazyfield, QuoteNode(name))
+            if !(initializer === nothing)
+                initializers[name] = initializer
+            end
         end
     end
 
@@ -303,6 +326,7 @@ function lazy_struct(expr, mod)
     end
 
     checks = foldr((a,b)->:(s === $a || $b), lazyfield[1:end-1]; init=:(s === $(lazyfield[end])))
+    initializers_dict_args = [:($(QuoteNode(i)) => $(esc(j))) for (i,j) in pairs(initializers)]
     ret = Expr(:block)
     push!(ret.args, quote
         $(esc(expr))
@@ -310,6 +334,10 @@ function lazy_struct(expr, mod)
         function Base.getproperty(x::$(esc(structname)), s::Symbol)
             if $(LazilyInitializedFields).islazyfield($(esc(structname)), s)
                 r = Base.getfield(x, s)
+                if r isa $Uninitialized && s in $(Tuple(keys(initializers)))
+                    r = Dict($(initializers_dict_args...))[s](x)
+                    setfield!(x, s, r)
+                end
                 r isa $Uninitialized && throw(UninitializedFieldException(typeof(x), s))
                 return r
             end

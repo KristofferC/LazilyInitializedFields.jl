@@ -4,7 +4,7 @@ authors = ["Kristoffer <kcarlsson89@gmail.com> and contributors"]
 version = "1.2.2"
 
 [compat]
-julia = "1"
+julia = "1.6"
 
 [extras]
 Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"

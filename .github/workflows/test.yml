@@ -19,7 +19,6 @@ jobs:
       fail-fast: false
       matrix:
         version:
-          - '1.0' # earliest compatible (according to `Project.toml`)
           - '1.6' # current LTS
           - '1' # latest stable
           - 'nightly'
