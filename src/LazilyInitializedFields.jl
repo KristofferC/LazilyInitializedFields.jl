@@ -284,7 +284,14 @@ end
 
 function lazy_field_with_initializer(expr)
     name, args, _ = lazy_field_no_initializer(expr.args[1])
-    return name, args, expr.args[2]
+    initializer = expr.args[2]
+    if initializer == :uninit || !(initializer isa Symbol)
+        # in this case the initializer is not a function but a value
+        # rewrite args in way that is compatible with @kwdef
+        args = :($args = $initializer)
+        initializer = nothing
+    end
+    return name, args, initializer
 end
 
 function lazy_struct(expr, mod)
